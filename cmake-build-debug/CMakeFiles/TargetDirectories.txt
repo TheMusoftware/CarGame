@@ -1,0 +1,3 @@
+/Users/musoftware/Desktop/CLion Projects/CarGame/cmake-build-debug/CMakeFiles/CarGame.dir
+/Users/musoftware/Desktop/CLion Projects/CarGame/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/musoftware/Desktop/CLion Projects/CarGame/cmake-build-debug/CMakeFiles/rebuild_cache.dir
