@@ -281,6 +281,7 @@ void printMainMenu() {
                 break;
         }
         refresh();
+        usleep(MENSLEEPRATE); // Delay for inputs
     }
 }
 
