@@ -90,10 +90,10 @@ void printWindow();                          //Draws the road on the screen
 void *newGame(void *);                       // manages new game
 void initGame();                             // Assigns initial values to all control parameters for the new game
 void initWindow();                           //Creates a new window and sets I/O settings
+void printInstructors();
 int main() {
     /*  Start - Mustafa Kazı */
     initWindow();
-
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
     int selected_menu_item = 0;
@@ -102,11 +102,12 @@ int main() {
         // Print menu items
         for (int i = 0; i < mainMenuItem; i++) {
             attron(COLOR_PAIR(1));
+
             if (i == selected_menu_item) {
                 attron(COLOR_PAIR(2));
-                printw("->");
+                mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             }
-            printw("%s\n", mainMenu[i]);
+            mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
             attroff(COLOR_PAIR(2));
         }
         int ch = getch();
@@ -267,4 +268,10 @@ void drawCar(Car c, int type, int direction) {
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
         attroff(COLOR_PAIR(c.ID));                  // disable color pair
     }
+}
+
+/* Mustafa Kazı */
+void printInstructors() {
+    initscr();
+    clear();
 }
