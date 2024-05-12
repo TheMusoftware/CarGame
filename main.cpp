@@ -354,3 +354,32 @@ void loadColorPair() {
     init_pair(COLOR_PAIR_GREEN, COLOR_GREEN, COLOR_BLACK);
     init_pair(COLOR_PAIR_RED, COLOR_RED, COLOR_BLACK);
 }
+
+/*Ugur Tansal*/
+void printPointFile(long point)
+{
+    FILE *pointFile=fopen(pointsTxt,"a+");
+    fwrite(&point,sizeof(point),1,pointFile);
+    fclose(pointFile);
+}
+
+/*Ugur Tansal*/
+void readPointFile()
+{
+    clear();
+    FILE *pointFile=fopen(pointsTxt,"r+");
+    long current;
+    fread(&current,sizeof(current),1,pointFile);
+    long gameNumber;
+    while (!feof(pointFile))
+    {
+        attron(COLOR_PAIR_GREEN);
+
+        //Ekrana yazdırılacak !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        gameNumber++;
+       fread(&current,sizeof(current),1,pointFile);
+    }
+     refresh();
+     sleep(5);
+    
+}
