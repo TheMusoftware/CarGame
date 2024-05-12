@@ -221,14 +221,14 @@ void printMainMenu() {
         clear();// Clear screen
         // Print menu items
         for (int i = 0; i < mainMenuItem; i++) {
-            attron(COLOR_PAIR(1));
+            attron(COLOR_PAIR_GREEN);
 
             if (i == selected_menu_item) {
-                attron(COLOR_PAIR(2));
+                attron(COLOR_PAIR_RED);
                 mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             }
             mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
-            attroff(COLOR_PAIR(2));
+            attroff(COLOR_PAIR_RED);
         }
         int ch = getch();
 
