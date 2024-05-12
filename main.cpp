@@ -288,7 +288,7 @@ void printMainMenu() {
 void *printInstructors(void *) {
     clear();
     for (int i = 0; i < instructionsItem; i++) {
-        attron(COLOR_PAIR(1));
+        attron(COLOR_PAIR_GREEN);
         mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", instructors[i]);
     }
     refresh();
