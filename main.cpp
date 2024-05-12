@@ -336,17 +336,15 @@ void *printSettings(void *) {
             case ENTER:
                 switch (selected_item) {
                     case 0:
-                        // Ayarları değiştir
                         playingGame.leftKey = leftKeyArrow;
                         playingGame.rightKey = RightKeyArrow;
-                        printMainMenu();
+                        printMainMenu(); // Return main menu
                         break;
 
                     case 1:
-                        // Başka bir ayarı değiştir
                         playingGame.leftKey = leftKeyA;
                         playingGame.rightKey = RightKeyD;
-                        printMainMenu();
+                        printMainMenu(); // Return main menu
                         break;
                 }
                 break;
