@@ -91,6 +91,7 @@ const char *pointsTxt = "points.txt";
 const char *settingMenu[50] = {"Play with < and > arrow keys", "Play with A and D keys"};
 //Array with options for the Main menu
 const char *mainMenu[50] = {"New Game", "Load the last game", "Instructions", "Settings", "Points", "Exit"};
+//Array with options for the Instructors menu -> Mustafa Kazı
 const char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right", "ESC: exits the game without saving", "S: saves and exits the game"};
 void drawCar(Car c, int type, int direction);//prints or remove the given car on the screen
 void printWindow();                          //Draws the road on the screen
