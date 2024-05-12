@@ -144,8 +144,8 @@ int main() {
 
                     case 2:
                         // Load Instr
+                        endwin();
                         break;
-
                     case 3:
                         // Load Settings
                         break;
@@ -153,7 +153,7 @@ int main() {
                         // Show points
                         break;
                     case 5:
-                        // Settings
+                        // Exit
                         endwin();
                         return 0;
                 }
@@ -272,6 +272,5 @@ void drawCar(Car c, int type, int direction) {
 
 /* Mustafa Kazı */
 void printInstructors() {
-    initscr();
-    clear();
+
 }
