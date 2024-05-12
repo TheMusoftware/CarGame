@@ -350,7 +350,6 @@ void *printSettings(void *) {
                 break;
         }
     }
-    return NULL;
 }
 
 /* Mustafa Kazı */
