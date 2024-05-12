@@ -106,8 +106,6 @@ void loadColorPair();                        // Assign color pairs
 int main() {
     /*  Start - Mustafa Kazı */
     printMainMenu();
-
-
     return 0;
 }
 
@@ -301,21 +299,19 @@ void *printSettings(void *) {
     clear();
     int selected_item = 0;
     start_color();
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(2, COLOR_RED, COLOR_BLACK);
 
     while (true) {
         clear();
         for (int i = 0; i < settingMenuItem; i++) {
             if (i == selected_item) {
-                attron(COLOR_PAIR(2));
+                attron(COLOR_PAIR(COLOR_PAIR_RED));
                 mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             } else {
-                attron(COLOR_PAIR(1));
+                attron(COLOR_PAIR(COLOR_PAIR_GREEN));
             }
             mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", settingMenu[i]);
-            attroff(COLOR_PAIR(1));
-            attroff(COLOR_PAIR(2));
+            attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
+            attroff(COLOR_PAIR(COLOR_PAIR_RED));
         }
         refresh();
 
@@ -339,13 +335,13 @@ void *printSettings(void *) {
                     case 0:
                         playingGame.leftKey = leftKeyArrow;
                         playingGame.rightKey = RightKeyArrow;
-                        printMainMenu(); // Return main menu
+                        printMainMenu();// Return main menu
                         break;
 
                     case 1:
                         playingGame.leftKey = leftKeyA;
                         playingGame.rightKey = RightKeyD;
-                        printMainMenu(); // Return main menu
+                        printMainMenu();// Return main menu
                         break;
                 }
                 break;
