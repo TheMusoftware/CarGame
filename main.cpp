@@ -221,14 +221,14 @@ void printMainMenu() {
         clear();// Clear screen
         // Print menu items
         for (int i = 0; i < mainMenuItem; i++) {
-            attron(COLOR_PAIR_GREEN);
+            attron(COLOR_PAIR(COLOR_PAIR_GREEN));
 
             if (i == selected_menu_item) {
-                attron(COLOR_PAIR_RED);
+                attron(COLOR_PAIR(COLOR_PAIR_RED));
                 mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             }
             mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
-            attroff(COLOR_PAIR_RED);
+            attroff(COLOR_PAIR(COLOR_PAIR_RED));
         }
         int ch = getch();
 
@@ -288,7 +288,7 @@ void printMainMenu() {
 void *printInstructors(void *) {
     clear();
     for (int i = 0; i < instructionsItem; i++) {
-        attron(COLOR_PAIR_GREEN);
+        attron(COLOR_PAIR(COLOR_PAIR_GREEN));
         mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", instructors[i]);
     }
     refresh();
@@ -377,9 +377,9 @@ void readPointFile()
 
         //Ekrana yazdırılacak !!!!!!!!!!!!!!!!!!!!!!!!!!!!
         gameNumber++;
-       fread(&current,sizeof(current),1,pointFile);
+        fread(&current,sizeof(current),1,pointFile);
     }
-     refresh();
-     sleep(5);
+    refresh();
+    sleep(5);
     
 }
