@@ -51,6 +51,12 @@
 #define numOfChars 3        // maximum number of patterns that can be selected for cars
 #define settingMenuItem 2   // number of options in the setting menu
 #define mainMenuItem 6      // number of options in the main menu
+/* Mustafa Kazı */
+#define instructionsItem 4// number of options in the instructions
+#define COLOR_PAIR_GREEN 1
+#define COLOR_PAIR_RED 2
+
+
 using namespace std;
 typedef struct Car {//
     int ID;
@@ -85,84 +91,21 @@ const char *pointsTxt = "points.txt";
 const char *settingMenu[50] = {"Play with < and > arrow keys", "Play with A and D keys"};
 //Array with options for the Main menu
 const char *mainMenu[50] = {"New Game", "Load the last game", "Instructions", "Settings", "Points", "Exit"};
+const char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right", "ESC: exits the game without saving", "S: saves and exits the game"};
 void drawCar(Car c, int type, int direction);//prints or remove the given car on the screen
 void printWindow();                          //Draws the road on the screen
 void *newGame(void *);                       // manages new game
 void initGame();                             // Assigns initial values to all control parameters for the new game
 void initWindow();                           //Creates a new window and sets I/O settings
-void printInstructors();
+void printMainMenu();                        // Print main menu
+void *printInstructors(void *);              // Print instructions
+void *printSettings(void *);                 // Print settings
+void loadColorPair();                        // Assign color pairs
+
 int main() {
     /*  Start - Mustafa Kazı */
-    initWindow();
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-    int selected_menu_item = 0;
-    while (true) {
-        clear();// Clear screen
-        // Print menu items
-        for (int i = 0; i < mainMenuItem; i++) {
-            attron(COLOR_PAIR(1));
+    printMainMenu();
 
-            if (i == selected_menu_item) {
-                attron(COLOR_PAIR(2));
-                mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
-            }
-            mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
-            attroff(COLOR_PAIR(2));
-        }
-        int ch = getch();
-
-        switch (ch) {
-            case KEYUP:
-                if (selected_menu_item > 0) {
-                    selected_menu_item--;
-                }
-                break;
-
-            case KEYDOWN:
-                if (selected_menu_item + 1 < mainMenuItem) {
-                    selected_menu_item++;
-                }
-                break;
-
-            case ENTER:
-                switch (selected_menu_item) {
-                    case 0:
-                        playingGame.leftKey = leftKeyArrow;
-                        playingGame.rightKey = RightKeyArrow;
-                        initGame();
-                        initWindow();
-                        pthread_t th1;                            //create new thread
-                        pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
-                        pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
-                        break;
-
-                    case 1:
-                        // Load Last Game
-
-                        break;
-
-                    case 2:
-                        // Load Instr
-                        endwin();
-                        break;
-                    case 3:
-                        // Load Settings
-                        break;
-                    case 4:
-                        // Show points
-                        break;
-                    case 5:
-                        // Exit
-                        endwin();
-                        return 0;
-                }
-                break;
-        }
-        refresh();
-    }
-
-    /* End - Mustafa Kazı */
 
     return 0;
 }
@@ -271,6 +214,149 @@ void drawCar(Car c, int type, int direction) {
 }
 
 /* Mustafa Kazı */
-void printInstructors() {
+void printMainMenu() {
+    initWindow();
+    loadColorPair();
+    int selected_menu_item = 0;
+    while (true) {
+        clear();// Clear screen
+        // Print menu items
+        for (int i = 0; i < mainMenuItem; i++) {
+            attron(COLOR_PAIR(1));
 
+            if (i == selected_menu_item) {
+                attron(COLOR_PAIR(2));
+                mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
+            }
+            mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
+            attroff(COLOR_PAIR(2));
+        }
+        int ch = getch();
+
+        switch (ch) {
+            case KEYUP:
+                if (selected_menu_item > 0) {
+                    selected_menu_item--;
+                }
+                break;
+
+            case KEYDOWN:
+                if (selected_menu_item + 1 < mainMenuItem) {
+                    selected_menu_item++;
+                }
+                break;
+
+            case ENTER:
+                switch (selected_menu_item) {
+                    pthread_t thMenu;
+                    case 0:
+                        initGame();
+                        initWindow();
+                        pthread_t th1;                            //create new thread
+                        pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
+                        pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+                        break;
+
+                    case 1:
+                        // Load Last Game
+
+                        break;
+
+                    case 2:
+                        // Load Instr
+                        pthread_create(&thMenu, NULL, printInstructors, NULL);
+                        pthread_join(thMenu, NULL);
+                        break;
+                    case 3:
+                        pthread_create(&thMenu, NULL, printSettings, NULL);
+                        pthread_join(thMenu, NULL);
+                        break;
+                    case 4:
+                        // Show points
+                        break;
+                    case 5:
+                        // Exit
+                        endwin();
+                        exit(1);
+                }
+                break;
+        }
+        refresh();
+    }
+}
+
+/* Mustafa Kazı */
+void *printInstructors(void *) {
+    clear();
+    for (int i = 0; i < instructionsItem; i++) {
+        attron(COLOR_PAIR(1));
+        mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", instructors[i]);
+    }
+    refresh();
+    sleep(5);
+}
+/* Mustafa Kazı */
+void *printSettings(void *) {
+    clear();
+    int selected_item = 0;
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+
+    while (true) {
+        clear();
+        for (int i = 0; i < settingMenuItem; i++) {
+            if (i == selected_item) {
+                attron(COLOR_PAIR(2));
+                mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
+            } else {
+                attron(COLOR_PAIR(1));
+            }
+            mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", settingMenu[i]);
+            attroff(COLOR_PAIR(1));
+            attroff(COLOR_PAIR(2));
+        }
+        refresh();
+
+        int ch = getch();
+
+        switch (ch) {
+            case KEY_UP:
+                if (selected_item > 0) {
+                    selected_item--;
+                }
+                break;
+
+            case KEY_DOWN:
+                if (selected_item + 1 < settingMenuItem) {
+                    selected_item++;
+                }
+                break;
+
+            case ENTER:
+                switch (selected_item) {
+                    case 0:
+                        // Ayarları değiştir
+                        playingGame.leftKey = leftKeyArrow;
+                        playingGame.rightKey = RightKeyArrow;
+                        printMainMenu();
+                        break;
+
+                    case 1:
+                        // Başka bir ayarı değiştir
+                        playingGame.leftKey = leftKeyA;
+                        playingGame.rightKey = RightKeyD;
+                        printMainMenu();
+                        break;
+                }
+                break;
+        }
+    }
+    return NULL;
+}
+
+/* Mustafa Kazı */
+void loadColorPair() {
+    init_pair(COLOR_PAIR_GREEN, COLOR_GREEN, COLOR_BLACK);
+    init_pair(COLOR_PAIR_RED, COLOR_RED, COLOR_BLACK);
 }
