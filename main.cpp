@@ -357,7 +357,7 @@ void loadColorPair() {
 }
 
 /*Ugur Tansal*/
-void printPointFile(long point)
+void savePointFile(long point)
 {
     FILE *pointFile=fopen(pointsTxt,"a+");
     fwrite(&point,sizeof(point),1,pointFile);
@@ -374,8 +374,9 @@ queue<long> *getPoints(){
     return points;
 }
 /*Ugur Tansal*/
-void readPointFile()
+void printPoints(queue<long> *points)
 {
+
     clear();
     FILE *pointFile=fopen(pointsTxt,"r+");
     long current;
