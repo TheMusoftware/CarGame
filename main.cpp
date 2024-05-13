@@ -377,20 +377,34 @@ queue<long> *getPoints(){
 /*Ugur Tansal*/
 void printPoints(queue<long> *points)
 {
+    queue<long> *points=getPoints();
     clear();
-    FILE *pointFile=fopen(pointsTxt,"r+");
-    long current;
-    fread(&current,sizeof(current)+2,1,pointFile);
-    long gameNumber;
-    while (!feof(pointFile))
-    {
-        attron(COLOR_PAIR_GREEN);
+    start_color();
+     int x =10, y = 5;
+     int gameNumber=1;
 
-        //Ekrana yazdırılacak !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        gameNumber++;
-        fread(&current,sizeof(current),1,pointFile);
+      attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+    while(!points.empty())
+    {
+
+        sprintf(text,"Game %d: %d",gameNumber++,points.front());
+        mvprintw(y, x, text);
+        y+= 2;
+        if(y==15)
+        {
+            y=2;
+            x+=5;
+        }
     }
+    attroff(COLOR_PAIR(1));
     refresh();
     sleep(5);
+    clear();
+    refresh();
+    usleep(3000000);
+	attroff(COLOR_PAIR(2));
+    clear();
+    usleep(1000000);
+    endwin();
 
 }
