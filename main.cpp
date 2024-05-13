@@ -361,6 +361,7 @@ void savePointFile(long point)
 {
     FILE *pointFile=fopen(pointsTxt,"a+");
     fwrite(&point,sizeof(point),1,pointFile);
+    fwrite("\n",2,1,pointFile);
     fclose(pointFile);
 }
 /* Mustafa Kazı */
@@ -376,11 +377,10 @@ queue<long> *getPoints(){
 /*Ugur Tansal*/
 void printPoints(queue<long> *points)
 {
-
     clear();
     FILE *pointFile=fopen(pointsTxt,"r+");
     long current;
-    fread(&current,sizeof(current),1,pointFile);
+    fread(&current,sizeof(current)+2,1,pointFile);
     long gameNumber;
     while (!feof(pointFile))
     {
@@ -392,5 +392,5 @@ void printPoints(queue<long> *points)
     }
     refresh();
     sleep(5);
-    
+
 }
