@@ -363,7 +363,16 @@ void printPointFile(long point)
     fwrite(&point,sizeof(point),1,pointFile);
     fclose(pointFile);
 }
-
+/* Mustafa Kazı */
+queue<long> *getPoints(){
+    queue<long> *points = new queue<long>;
+    FILE *pointsFile = fopen(pointsTxt,"r");
+    long point = -1;
+    while(fread(&point,sizeof(long),1,pointsFile)){
+        points->push(point);
+    }
+    return points;
+}
 /*Ugur Tansal*/
 void readPointFile()
 {
