@@ -166,16 +166,18 @@ void printWindow() {
         mvprintw(i, lineX, "#");
     }
     for (int i = 5; i < wHeight - 10; i+=10) {
+        attron(COLOR_PAIR(COLOR_PAIR_GREEN));
         mvprintw(i, wWidth+6, "*");
         mvprintw(i+1, wWidth+5, "*");
         mvprintw(i+1, wWidth+7, "*");
         mvprintw(i+2, wWidth+4, "*");
         mvprintw(i+2,wWidth+6, "*");
         mvprintw(i+2, wWidth+8, "*");
-
+        attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
+        attron(COLOR_PAIR(COLOR_PAIR_RED));
         mvprintw(i+3, wWidth+6, "#");
         mvprintw(i+4, wWidth+6, "#");
-
+        attroff(COLOR_PAIR(COLOR_PAIR_RED));
     }
 }
 
