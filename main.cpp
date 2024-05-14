@@ -165,6 +165,18 @@ void printWindow() {
     for (int i = lineLEN; i < wHeight - lineLEN; ++i) {//line in the middle of the road
         mvprintw(i, lineX, "#");
     }
+    for (int i = 5; i < wHeight - 10; i+=10) {
+        mvprintw(i, wWidth+6, "*");
+        mvprintw(i+1, wWidth+5, "*");
+        mvprintw(i+1, wWidth+7, "*");
+        mvprintw(i+2, wWidth+4, "*");
+        mvprintw(i+2,wWidth+6, "*");
+        mvprintw(i+2, wWidth+8, "*");
+
+        mvprintw(i+3, wWidth+6, "#");
+        mvprintw(i+4, wWidth+6, "#");
+
+    }
 }
 
 void drawCar(Car c, int type, int direction) {
