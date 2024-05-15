@@ -106,6 +106,10 @@ void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
 void loadColorPair();                       // Assign color pairs
 void printTrees();
+void savePointFile(int point);
+queue<int> *getPoints();
+void printPoints();
+
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -302,6 +306,7 @@ void printMainMenu() {
                         break;
                     case 4:
                         // Show points
+                        printPoints();
                         break;
                     case 5:
                         // Exit
@@ -388,9 +393,9 @@ void loadColorPair() {
 }
 
 /*Ugur Tansal*/
-void savePointFile(long point) {
+void savePointFile(int point) {
     FILE *pointFile = fopen(pointsTxt, "a+");
-    fwrite(&point, sizeof(point), 1, pointFile);
+    fwrite(&point, sizeof(int), 1, pointFile);
     fwrite("\n", 2, 1, pointFile);
     fclose(pointFile);
 }
@@ -403,6 +408,7 @@ queue<int> *getPoints() {
     while (fread(&point, sizeof(long), 1, pointsFile)) {
         points->push(point);
     }
+    fclose(pointsFile);
     return points;
 }
 
