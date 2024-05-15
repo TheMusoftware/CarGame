@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #define wHeight 40          // height of the road
 #define wWidth 100          // width of the road
 #define lineX 45            // x coordinate of the middle line
@@ -92,7 +93,9 @@ const char *settingMenu[50] = {"Play with < and > arrow keys", "Play with A and 
 //Array with options for the Main menu
 const char *mainMenu[50] = {"New Game", "Load the last game", "Instructions", "Settings", "Points", "Exit"};
 //Array with options for the Instructors menu -> Mustafa Kazı
-const char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right", "ESC: exits the game without saving", "S: saves and exits the game"};
+const char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right",
+                               "ESC: exits the game without saving", "S: saves and exits the game"};
+
 void drawCar(Car c, int type, int direction);//prints or remove the given car on the screen
 void printWindow();                          //Draws the road on the screen
 void *newGame(void *);                       // manages new game
@@ -101,7 +104,8 @@ void initWindow();                           //Creates a new window and sets I/O
 void printMainMenu();                        // Print main menu
 void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
-void loadColorPair();                        // Assign color pairs
+void loadColorPair();                       // Assign color pairs
+void printTrees();
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -127,6 +131,7 @@ void initGame() {
     playingGame.current.clr = COLOROFCAR;
     playingGame.current.chr = '*';
 }
+
 void *newGame(void *) {
     printWindow();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
@@ -143,6 +148,7 @@ void *newGame(void *) {
         usleep(GAMESLEEPRATE);// sleep
     }
 }
+
 void initWindow() {
     initscr();            // initialize the ncurses window
     start_color();        // enable color manipulation
@@ -154,6 +160,7 @@ void initWindow() {
     clear();              // clear the screen
     sleep(1);
 }
+
 void printWindow() {
     for (int i = 1; i < wHeight - 1; ++i) {
         //mvprintw: Used to print text on the window, paramters order: y , x , string
@@ -165,18 +172,25 @@ void printWindow() {
     for (int i = lineLEN; i < wHeight - lineLEN; ++i) {//line in the middle of the road
         mvprintw(i, lineX, "#");
     }
-    for (int i = 5; i < wHeight - 10; i+=10) {
+
+    printTrees();
+
+}
+
+/*Ugur Tansal*/
+void printTrees() {
+    for (int i = 5; i < wHeight - 10; i += 10) {
         attron(COLOR_PAIR(COLOR_PAIR_GREEN));
-        mvprintw(i, wWidth+6, "*");
-        mvprintw(i+1, wWidth+5, "*");
-        mvprintw(i+1, wWidth+7, "*");
-        mvprintw(i+2, wWidth+4, "*");
-        mvprintw(i+2,wWidth+6, "*");
-        mvprintw(i+2, wWidth+8, "*");
+        mvprintw(i, wWidth + 6, "*");
+        mvprintw(i + 1, wWidth + 5, "*");
+        mvprintw(i + 1, wWidth + 7, "*");
+        mvprintw(i + 2, wWidth + 4, "*");
+        mvprintw(i + 2, wWidth + 6, "*");
+        mvprintw(i + 2, wWidth + 8, "*");
         attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
         attron(COLOR_PAIR(COLOR_PAIR_RED));
-        mvprintw(i+3, wWidth+6, "#");
-        mvprintw(i+4, wWidth+6, "#");
+        mvprintw(i + 3, wWidth + 6, "#");
+        mvprintw(i + 4, wWidth + 6, "#");
         attroff(COLOR_PAIR(COLOR_PAIR_RED));
     }
 }
@@ -184,7 +198,8 @@ void printWindow() {
 void drawCar(Car c, int type, int direction) {
     //If the user does not want to exit the game and the game continues
     if (playingGame.IsSaveCliked != true && playingGame.IsGameRunning == true) {
-        init_pair(c.ID, c.clr, 0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
+        init_pair(c.ID, c.clr,
+                  0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
         //0: Black (COLOR_BLACK)
         //1: Red (COLOR_RED)
         //2: Green (COLOR_GREEN)
@@ -267,7 +282,8 @@ void printMainMenu() {
                         initWindow();
                         pthread_t th1;                            //create new thread
                         pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
-                        pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+                        pthread_join(th1,
+                                     NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
                         break;
 
                     case 1:
@@ -309,6 +325,7 @@ void *printInstructors(void *) {
     refresh();
     sleep(5);
 }
+
 /* Mustafa Kazı */
 void *printSettings(void *) {
     clear();
@@ -371,43 +388,42 @@ void loadColorPair() {
 }
 
 /*Ugur Tansal*/
-void savePointFile(long point)
-{
-    FILE *pointFile=fopen(pointsTxt,"a+");
-    fwrite(&point,sizeof(point),1,pointFile);
-    fwrite("\n",2,1,pointFile);
+void savePointFile(long point) {
+    FILE *pointFile = fopen(pointsTxt, "a+");
+    fwrite(&point, sizeof(point), 1, pointFile);
+    fwrite("\n", 2, 1, pointFile);
     fclose(pointFile);
 }
+
 /* Mustafa Kazı */
-queue<long> *getPoints(){
-    queue<long> *points = new queue<long>;
-    FILE *pointsFile = fopen(pointsTxt,"r");
-    long point = -1;
-    while(fread(&point,sizeof(long),1,pointsFile)){
+queue<int> *getPoints() {
+    queue<int> *points = new queue<int>;
+    FILE *pointsFile = fopen(pointsTxt, "r");
+    int point = -1;
+    while (fread(&point, sizeof(long), 1, pointsFile)) {
         points->push(point);
     }
     return points;
 }
+
 /*Ugur Tansal*/
-void printPoints(queue<long> *points)
-{
-    queue<long> *points=getPoints();
+void printPoints() {
+    queue<int> *points = getPoints();
     clear();
     start_color();
-     int x =10, y = 5;
-     int gameNumber=1;
+    int x = 10, y = 5;
+    int gameNumber = 1;
 
-      attron(COLOR_PAIR(COLOR_PAIR_GREEN));
-    while(!points.empty())
-    {
+    char text[100];
+    attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+    while (!points->empty()) {
 
-        sprintf(text,"Game %d: %d",gameNumber++,points.front());
+        sprintf(text, "Game %d: %d", gameNumber++, points->front());
         mvprintw(y, x, text);
-        y+= 2;
-        if(y==15)
-        {
-            y=2;
-            x+=5;
+        y += 2;
+        if (y == 15) {
+            y = 2;
+            x += 5;
         }
     }
     attroff(COLOR_PAIR(1));
@@ -416,7 +432,7 @@ void printPoints(queue<long> *points)
     clear();
     refresh();
     usleep(3000000);
-	attroff(COLOR_PAIR(2));
+    attroff(COLOR_PAIR(2));
     clear();
     usleep(1000000);
     endwin();
