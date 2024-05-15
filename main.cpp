@@ -107,7 +107,7 @@ void *printSettings(void *);                 // Print settings
 void loadColorPair();                       // Assign color pairs
 void printTrees();
 void savePointFile(int point);
-queue<int> *getPoints();
+queue<int> getPoints();
 void printPoints();
 
 
@@ -401,46 +401,74 @@ void savePointFile(int point) {
 }
 
 /* Mustafa Kazı */
-queue<int> *getPoints() {
-    queue<int> *points = new queue<int>;
-    FILE *pointsFile = fopen(pointsTxt, "r");
-    int point = -1;
-    while (fread(&point, sizeof(int), 1, pointsFile)) {
-        points->push(point);
+queue<int> getPoints() {
+    queue<int> points;
+
+    FILE* pointsFile = fopen(pointsTxt, "r");
+    if (pointsFile == nullptr) {
+        points.push(5);
+        return points;
     }
+
+    int point = -1;
+    while (fscanf(pointsFile, "%d", &point) == 1) {
+        points.push(point);
+    }
+
     fclose(pointsFile);
     return points;
 }
 
+
 /*Ugur Tansal*/
 void printPoints() {
-    queue<int> *points = getPoints();
-    clear();
+    // Retrieve the queue of points, handle potential errors
+    queue<int> points = getPoints();
+    if (points.empty()) {
+        mvprintw(5, 10, "Error: No points retrieved from getPoints()");  // Informative message
+        refresh();
+        return;
+    }
+
+    // Initialize ncurses
+    initscr();
     start_color();
+    cbreak();  // Disable line buffering for immediate input
+    noecho();   // Disable character echoing
+
+    // Set up colors (assuming COLOR_PAIR_GREEN is defined correctly)
+    init_pair(1, COLOR_BLACK, COLOR_GREEN);  // Green text on black background
+    attron(COLOR_PAIR(1));
+
     int x = 10, y = 5;
     int gameNumber = 1;
 
-    char text[100];
-    attron(COLOR_PAIR(COLOR_PAIR_GREEN));
-    while (!points->empty()) {
+    while (!points.empty()) {
+        // Format text using fmt for safety and readability
+        char text[200];
+        sprintf(text,"Game %d: %d", gameNumber++, points.front());
 
-        sprintf(text, "Game %d: %d", gameNumber++, points->front());
+        // Print formatted text at the current position
         mvprintw(y, x, text);
         y += 2;
+
+        // Wrap around to the next column if reaching the bottom
         if (y == 15) {
             y = 2;
             x += 5;
         }
+
+        // Limit the number of printed elements (optional)
+        if (y > 12) {  // Adjust threshold as needed
+            break;
+        }
+
+        points.pop();  // Remove the printed element from the queue
     }
+
+    // Restore terminal settings
     attroff(COLOR_PAIR(1));
     refresh();
-    sleep(5);
-    clear();
-    refresh();
-    usleep(3000000);
-    attroff(COLOR_PAIR(2));
-    clear();
-    usleep(1000000);
+    sleep(5);  // Adjust delay as desired
     endwin();
-
 }
