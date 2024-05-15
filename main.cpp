@@ -405,7 +405,7 @@ queue<int> *getPoints() {
     queue<int> *points = new queue<int>;
     FILE *pointsFile = fopen(pointsTxt, "r");
     int point = -1;
-    while (fread(&point, sizeof(long), 1, pointsFile)) {
+    while (fread(&point, sizeof(int), 1, pointsFile)) {
         points->push(point);
     }
     fclose(pointsFile);
