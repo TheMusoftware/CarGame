@@ -103,7 +103,7 @@ void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
 void loadColorPair();                        // Assign color pairs
 void printPoints();
-queue<long> *getPoints();//Read points from points file
+queue<int> *getPoints();//Read points from points file
 void savePointFile(long point);
 
 int main() {
@@ -395,7 +395,7 @@ queue<int> *getPoints() {
 /*Ugur Tansal*/
 void printPoints()// düzenlendi
 {
-    queue<long> *points = getPoints();
+    queue<int> *points = getPoints();
     clear();
     start_color();
     int x = 10, y = 5;
@@ -405,7 +405,7 @@ void printPoints()// düzenlendi
     char text[200];// Unutulmuş
     while (!points->empty()) {
 
-        sprintf(text, "Game %d: %ld", gameNumber++, points->front());
+        sprintf(text, "Game %d: %d", gameNumber++, points->front());
         mvprintw(y, x, text);
         y += 2;
         if (y == 15) {
