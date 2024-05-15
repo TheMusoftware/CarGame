@@ -101,7 +101,8 @@ void initWindow();                           //Creates a new window and sets I/O
 void printMainMenu();                        // Print main menu
 void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
-void loadColorPair();                        // Assign color pairs
+void loadColorPair();                       // Assign color pairs
+void printTrees();
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -165,6 +166,14 @@ void printWindow() {
     for (int i = lineLEN; i < wHeight - lineLEN; ++i) {//line in the middle of the road
         mvprintw(i, lineX, "#");
     }
+
+    printTrees();
+    
+}
+
+/*Ugur Tansal*/
+void printTrees()
+{
     for (int i = 5; i < wHeight - 10; i+=10) {
         attron(COLOR_PAIR(COLOR_PAIR_GREEN));
         mvprintw(i, wWidth+6, "*");
