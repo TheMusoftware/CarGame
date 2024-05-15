@@ -104,7 +104,7 @@ void initWindow();                           //Creates a new window and sets I/O
 void printMainMenu();                        // Print main menu
 void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
-void loadColorPair();                       // Assign color pairs
+void loadColorPair();                        // Assign color pairs
 void printTrees();
 void savePointFile(int point);
 queue<int> getPoints();
@@ -178,7 +178,6 @@ void printWindow() {
     }
 
     printTrees();
-
 }
 
 /*Ugur Tansal*/
@@ -287,7 +286,7 @@ void printMainMenu() {
                         pthread_t th1;                            //create new thread
                         pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
                         pthread_join(th1,
-                                     NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+                                     NULL);//Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
                         break;
 
                     case 1:
@@ -316,7 +315,7 @@ void printMainMenu() {
                 break;
         }
         refresh();
-        usleep(MENSLEEPRATE); // Delay for inputs
+        usleep(MENSLEEPRATE);// Delay for inputs
     }
 }
 
@@ -404,7 +403,7 @@ void savePointFile(int point) {
 queue<int> getPoints() {
     queue<int> points;
 
-    FILE* pointsFile = fopen(pointsTxt, "r");
+    FILE *pointsFile = fopen(pointsTxt, "r");
     if (pointsFile == nullptr) {
         return points;
     }
@@ -421,45 +420,43 @@ queue<int> getPoints() {
 
 /*Ugur Tansal*/
 void printPoints() {
-    // Retrieve the queue of points, handle potential errors
+
     queue<int> points = getPoints();
     if (points.empty()) {
-        char text[200];
-        getcwd(text,200);
-        mvprintw(5, 10, text);  // Informative message
+
+        mvprintw(MENUY, MENUX, "No points...");
         refresh();
         return;
     }
 
     clear();
-    
+
     attron(COLOR_PAIR(1));
 
-    int x =MENUX, y = MENUY;
+    int x = MENUX, y = MENUY;
     int gameNumber = 1;
-    
+
 
     while (!points.empty()) {
-        // Format text using fmt for safety and readability
-        char text[200];
-        sprintf(text,"Game %d: %d", gameNumber++, points.front());
 
-        // Print formatted text at the current position
+        char text[200];
+        sprintf(text, "Game %d: %d", gameNumber++, points.front());
+
         mvprintw(y, x, text);
         y += MENUDIF;
 
-        
-        if (gameNumber %10==0) {
+
+        if (gameNumber % 10 == 1) {
             y = MENUY;
             x += MENUDIFX;
         }
 
-        points.pop();  
+        points.pop();
     }
 
-   
+
     attroff(COLOR_PAIR(1));
     refresh();
-    sleep(5);  
+    sleep(5);
     endwin();
 }
