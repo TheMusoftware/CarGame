@@ -406,7 +406,6 @@ queue<int> getPoints() {
 
     FILE* pointsFile = fopen(pointsTxt, "r");
     if (pointsFile == nullptr) {
-        points.push(5);
         return points;
     }
 
@@ -425,20 +424,16 @@ void printPoints() {
     // Retrieve the queue of points, handle potential errors
     queue<int> points = getPoints();
     if (points.empty()) {
-        mvprintw(5, 10, "Error: No points retrieved from getPoints()");  // Informative message
+        char text[200];
+        getcwd(text,200);
+        mvprintw(5, 10, text);  // Informative message
         refresh();
         return;
     }
 
-    // Initialize ncurses
-    initscr();
-    start_color();
-    cbreak();  // Disable line buffering for immediate input
-    noecho();   // Disable character echoing
-
+    clear();
     // Set up colors (assuming COLOR_PAIR_GREEN is defined correctly)
-    init_pair(1, COLOR_BLACK, COLOR_GREEN);  // Green text on black background
-    attron(COLOR_PAIR(1));
+    attron(COLOR_PAIR(COLOR_PAIR_GREEN));
 
     int x = 10, y = 5;
     int gameNumber = 1;
@@ -456,11 +451,6 @@ void printPoints() {
         if (y == 15) {
             y = 2;
             x += 5;
-        }
-
-        // Limit the number of printed elements (optional)
-        if (y > 12) {  // Adjust threshold as needed
-            break;
         }
 
         points.pop();  // Remove the printed element from the queue
