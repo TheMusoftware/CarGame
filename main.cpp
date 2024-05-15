@@ -102,9 +102,6 @@ void printMainMenu();                        // Print main menu
 void *printInstructors(void *);              // Print instructions
 void *printSettings(void *);                 // Print settings
 void loadColorPair();                        // Assign color pairs
-void printPoints();
-queue<int> *getPoints();//Read points from points file
-void savePointFile(long point);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -168,18 +165,18 @@ void printWindow() {
     for (int i = lineLEN; i < wHeight - lineLEN; ++i) {//line in the middle of the road
         mvprintw(i, lineX, "#");
     }
-    for (int i = 5; i < wHeight - 10; i += 10) {
+    for (int i = 5; i < wHeight - 10; i+=10) {
         attron(COLOR_PAIR(COLOR_PAIR_GREEN));
-        mvprintw(i, wWidth + 6, "*");
-        mvprintw(i + 1, wWidth + 5, "*");
-        mvprintw(i + 1, wWidth + 7, "*");
-        mvprintw(i + 2, wWidth + 4, "*");
-        mvprintw(i + 2, wWidth + 6, "*");
-        mvprintw(i + 2, wWidth + 8, "*");
+        mvprintw(i, wWidth+6, "*");
+        mvprintw(i+1, wWidth+5, "*");
+        mvprintw(i+1, wWidth+7, "*");
+        mvprintw(i+2, wWidth+4, "*");
+        mvprintw(i+2,wWidth+6, "*");
+        mvprintw(i+2, wWidth+8, "*");
         attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
         attron(COLOR_PAIR(COLOR_PAIR_RED));
-        mvprintw(i + 3, wWidth + 6, "#");
-        mvprintw(i + 4, wWidth + 6, "#");
+        mvprintw(i+3, wWidth+6, "#");
+        mvprintw(i+4, wWidth+6, "#");
         attroff(COLOR_PAIR(COLOR_PAIR_RED));
     }
 }
@@ -289,7 +286,6 @@ void printMainMenu() {
                         break;
                     case 4:
                         // Show points
-                        printPoints();
                         break;
                     case 5:
                         // Exit
@@ -299,7 +295,7 @@ void printMainMenu() {
                 break;
         }
         refresh();
-        usleep(MENSLEEPRATE);// Delay for inputs
+        usleep(MENSLEEPRATE); // Delay for inputs
     }
 }
 
@@ -375,42 +371,43 @@ void loadColorPair() {
 }
 
 /*Ugur Tansal*/
-void savePointFile(long point) {
-    FILE *pointFile = fopen(pointsTxt, "a+");
-    fwrite(&point, sizeof(point), 1, pointFile);
-    fwrite("\n", 2, 1, pointFile);
+void savePointFile(long point)
+{
+    FILE *pointFile=fopen(pointsTxt,"a+");
+    fwrite(&point,sizeof(point),1,pointFile);
+    fwrite("\n",2,1,pointFile);
     fclose(pointFile);
 }
 /* Mustafa Kazı */
-queue<int> *getPoints() {
-    queue<int> *points = new queue<int>;
-    FILE *pointsFile = fopen(pointsTxt, "r");
-    int point = -1;
-    while (fread(&point, sizeof(long), 1, pointsFile)) {
+queue<long> *getPoints(){
+    queue<long> *points = new queue<long>;
+    FILE *pointsFile = fopen(pointsTxt,"r");
+    long point = -1;
+    while(fread(&point,sizeof(long),1,pointsFile)){
         points->push(point);
     }
-    fclose(pointsFile);
     return points;
 }
 /*Ugur Tansal*/
-void printPoints()// düzenlendi
+void printPoints(queue<long> *points)
 {
-    queue<int> *points = getPoints();
+    queue<long> *points=getPoints();
     clear();
     start_color();
-    int x = 10, y = 5;
-    int gameNumber = 1;
+     int x =10, y = 5;
+     int gameNumber=1;
 
-    attron(COLOR_PAIR(COLOR_PAIR_GREEN));
-    char text[200];// Unutulmuş
-    while (!points->empty()) {
+      attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+    while(!points.empty())
+    {
 
-        sprintf(text, "Game %d: %d", gameNumber++, points->front());
+        sprintf(text,"Game %d: %d",gameNumber++,points.front());
         mvprintw(y, x, text);
-        y += 2;
-        if (y == 15) {
-            y = 2;
-            x += 5;
+        y+= 2;
+        if(y==15)
+        {
+            y=2;
+            x+=5;
         }
     }
     attroff(COLOR_PAIR(1));
@@ -419,8 +416,9 @@ void printPoints()// düzenlendi
     clear();
     refresh();
     usleep(3000000);
-    attroff(COLOR_PAIR(2));
+	attroff(COLOR_PAIR(2));
     clear();
     usleep(1000000);
     endwin();
+
 }
