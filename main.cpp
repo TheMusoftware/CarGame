@@ -109,7 +109,7 @@ void printTrees();
 void savePointFile(int point);
 queue<int> getPoints();
 void printPoints();
-
+void moveCar(int key);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -137,17 +137,18 @@ void initGame() {
 }
 
 void *newGame(void *) {
+    /* Mustafa Kazı */
+    if (playingGame.leftKey != leftKeyA) {
+        playingGame.leftKey = leftKeyArrow;
+        playingGame.rightKey = RightKeyArrow;
+    }
     printWindow();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
     int key;
     while (playingGame.IsGameRunning) {//continue until the game is over
         key = getch();                 //Get input for the player to press the arrow keys
         if (key != KEYERROR) {
-            if (key == playingGame.leftKey) {                      // If the left  key is pressed
-                drawCar(playingGame.current, 1, 1);                // removes player's car from screen
-                playingGame.current.x -= playingGame.current.speed;// update position
-                drawCar(playingGame.current, 2, 1);                // draw player's car with new position
-            }
+            moveCar(key);
         }
         usleep(GAMESLEEPRATE);// sleep
     }
@@ -459,4 +460,28 @@ void printPoints() {
     refresh();
     sleep(5);
     endwin();
+}
+
+/* Mustafa Kazı */
+void moveCar(int key) {
+    if (key == playingGame.leftKey) {
+        drawCar(playingGame.current, 1, 1);
+
+        if ((playingGame.current.x - playingGame.current.speed) > 5) {
+            playingGame.current.x -= playingGame.current.speed;
+        } else {
+            playingGame.current.x = 5;
+        }
+
+        drawCar(playingGame.current, 2, 1);
+    } else if (key == playingGame.rightKey) {
+        drawCar(playingGame.current, 1, 1);
+
+        if ((playingGame.current.x + playingGame.current.speed) < 90) {
+            playingGame.current.x += playingGame.current.speed;
+        } else {
+            playingGame.current.x = 90;
+        }
+        drawCar(playingGame.current, 2, 1);
+    }
 }
