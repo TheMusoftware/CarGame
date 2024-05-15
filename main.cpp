@@ -432,11 +432,12 @@ void printPoints() {
     }
 
     clear();
-    // Set up colors (assuming COLOR_PAIR_GREEN is defined correctly)
-    attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+    
+    attron(COLOR_PAIR(1));
 
-    int x = 10, y = 5;
+    int x =MENUX, y = MENUY;
     int gameNumber = 1;
+    
 
     while (!points.empty()) {
         // Format text using fmt for safety and readability
@@ -445,20 +446,20 @@ void printPoints() {
 
         // Print formatted text at the current position
         mvprintw(y, x, text);
-        y += 2;
+        y += MENUDIF;
 
-        // Wrap around to the next column if reaching the bottom
-        if (y == 15) {
-            y = 2;
-            x += 5;
+        
+        if (gameNumber %10==0) {
+            y = MENUY;
+            x += MENUDIFX;
         }
 
-        points.pop();  // Remove the printed element from the queue
+        points.pop();  
     }
 
-    // Restore terminal settings
+   
     attroff(COLOR_PAIR(1));
     refresh();
-    sleep(5);  // Adjust delay as desired
+    sleep(5);  
     endwin();
 }
