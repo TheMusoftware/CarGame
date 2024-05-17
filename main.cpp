@@ -518,6 +518,7 @@ Car generateCar(queue<Car> cars) {
         bool control = false;//If the values uniquely
 
         do {
+            control = false;
             do {
                 newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
             } while (newCar.x == lineX);
