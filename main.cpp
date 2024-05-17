@@ -110,6 +110,7 @@ void savePointFile(int point);
 queue<int> getPoints();
 void printPoints();
 void moveCar(int key);
+Car generateCar(queue<Car> cars);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -484,4 +485,73 @@ void moveCar(int key) {
         }
         drawCar(playingGame.current, 2, 1);
     }
+}
+
+Car generateCar(queue<Car> cars)
+{
+    if(cars.size()<maxCarNumber)
+    {
+
+        Car newCar;
+        if(cars.empty())
+        {
+            newCar.ID=IDSTART;
+        }
+        else if(cars.back().ID<IDMAX)
+        {
+            newCar.ID=cars.back().ID++;
+        }
+        else
+        {
+            newCar.ID=IDSTART;
+        }
+
+        srand(time(NULL));
+        int chrNum; //Random number for character
+        bool control=false; //If the values uniquely
+
+        do
+        {
+          newCar.x=rand() % (90 - 5 + 1 ) + 5;
+          newCar.y=rand() % ( 10+ 1 ) -10;
+          newCar.height=rand() % (7 - 5 + 1 ) + 5;
+          newCar.width=rand() % (7 - 5 + 1 ) + 5;
+          newCar.speed=newCar.height/2;
+
+          newCar.clr=rand() % (4 - 1 + 1 ) + 1;
+          newCar.isExist=false;
+          chrNum=rand() % (numOfChars-1 + 1 )+1 ;
+           switch(chrNum)
+           {
+           case 1:
+            newCar.chr='*';
+            break;
+
+          case 2:
+              newCar.chr='#';
+            break;
+
+          case 3:
+            newCar.chr='+';
+            break;
+           }
+
+        queue<Car> newQueue;
+        Car current;
+        while(!cars.empty())
+        {
+            current=cars.front();
+            newQueue.push(current);
+            cars.pop();
+            if(newCar.clr==current.clr && newCar.height==current.height&&newCar.width==current.width&&newCar.speed==current.speed&&newCar.chr==current.chr)
+            {
+                control=true;
+            }
+        }
+
+    }while(control);
+
+    return newCar;
+    }
+    return cars.back(); ///NULL DÖNMÜYORR!!!!!!!!!!!!!!!!!!!!!!
 }
