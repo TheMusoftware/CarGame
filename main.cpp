@@ -606,6 +606,7 @@ void *enqueueCars(void *) {
     pthread_exit(NULL);
 }
 
+/* Mustafa Kazı */
 void printCurrentPoints() {
     mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
     refresh();
