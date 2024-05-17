@@ -111,6 +111,9 @@ queue<int> getPoints();
 void printPoints();
 void moveCar(int key);
 Car generateCar(queue<Car> cars);
+void *moveEnemyCars(void *args);
+void *enqueueCars(void *);
+void printCurrentPoints();
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -121,7 +124,7 @@ int main() {
 void initGame() {
     playingGame.cars = queue<Car>();
     playingGame.counter = IDSTART;
-    //playingGame.mutexFile = PTHREAD_MUTEX_INITIALIZER; //assigns the initial value for the mutex
+    pthread_mutex_init(&playingGame.mutexFile, NULL);
     playingGame.level = 1;
     playingGame.moveSpeed = ISPEED;
     playingGame.points = 0;
@@ -138,21 +141,31 @@ void initGame() {
 }
 
 void *newGame(void *) {
-    /* Mustafa Kazı */
     if (playingGame.leftKey != leftKeyA) {
         playingGame.leftKey = leftKeyArrow;
         playingGame.rightKey = RightKeyArrow;
     }
     printWindow();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
+
+    pthread_t thMoveEnemyCars, thEnqueueCars;
+    pthread_create(&thMoveEnemyCars, NULL, moveEnemyCars, NULL);// Start the thread to move enemy cars
+    pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);    // Start the thread to enqueue new cars
+
     int key;
-    while (playingGame.IsGameRunning) {//continue until the game is over
-        key = getch();                 //Get input for the player to press the arrow keys
+    while (playingGame.IsGameRunning) {// Continue until the game is over
+        printCurrentPoints();
+        key = getch();// Get input for the player to press the arrow keys
         if (key != KEYERROR) {
             moveCar(key);
         }
         usleep(GAMESLEEPRATE);// sleep
     }
+
+    pthread_join(thMoveEnemyCars, NULL);
+    pthread_join(thEnqueueCars, NULL);
+
+    pthread_exit(NULL);
 }
 
 void initWindow() {
@@ -487,71 +500,113 @@ void moveCar(int key) {
     }
 }
 
-Car generateCar(queue<Car> cars)
-{
-    if(cars.size()<maxCarNumber)
-    {
+/* Uğur Tansal */
+Car generateCar(queue<Car> cars) {
+    if (cars.size() < maxCarNumber) {
 
         Car newCar;
-        if(cars.empty())
-        {
-            newCar.ID=IDSTART;
-        }
-        else if(cars.back().ID<IDMAX)
-        {
-            newCar.ID=cars.back().ID++;
-        }
-        else
-        {
-            newCar.ID=IDSTART;
+        if (cars.empty()) {
+            newCar.ID = IDSTART;
+        } else if (cars.back().ID < IDMAX) {
+            newCar.ID = cars.back().ID++;
+        } else {
+            newCar.ID = IDSTART;
         }
 
         srand(time(NULL));
-        int chrNum; //Random number for character
-        bool control=false; //If the values uniquely
+        int chrNum;          //Random number for character
+        bool control = false;//If the values uniquely
 
-        do
-        {
-          newCar.x=rand() % (90 - 5 + 1 ) + 5;
-          newCar.y=rand() % ( 10+ 1 ) -10;
-          newCar.height=rand() % (7 - 5 + 1 ) + 5;
-          newCar.width=rand() % (7 - 5 + 1 ) + 5;
-          newCar.speed=newCar.height/2;
+        do {
+            do {
+                newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
+            } while (newCar.x == lineX);
+            newCar.y = rand() % (10 + 1) - 10;
+            newCar.height = rand() % (7 - 5 + 1) + 5;
+            newCar.width = rand() % (7 - 5 + 1) + 5;
+            newCar.speed = newCar.height / 2;
 
-          newCar.clr=rand() % (4 - 1 + 1 ) + 1;
-          newCar.isExist=false;
-          chrNum=rand() % (numOfChars-1 + 1 )+1 ;
-           switch(chrNum)
-           {
-           case 1:
-            newCar.chr='*';
-            break;
+            newCar.clr = rand() % (4 - 1 + 1) + 1;
+            newCar.isExist = false;
+            chrNum = rand() % (numOfChars - 1 + 1) + 1;
+            switch (chrNum) {
+                case 1:
+                    newCar.chr = '*';
+                    break;
 
-          case 2:
-              newCar.chr='#';
-            break;
+                case 2:
+                    newCar.chr = '#';
+                    break;
 
-          case 3:
-            newCar.chr='+';
-            break;
-           }
+                case 3:
+                    newCar.chr = '+';
+                    break;
+            }
 
-        queue<Car> newQueue;
-        Car current;
-        while(!cars.empty())
-        {
-            current=cars.front();
-            newQueue.push(current);
-            cars.pop();
-            if(newCar.clr==current.clr && newCar.height==current.height&&newCar.width==current.width&&newCar.speed==current.speed&&newCar.chr==current.chr)
-            {
-                control=true;
+            queue<Car> newQueue;
+            Car current;
+            while (!cars.empty()) {
+                current = cars.front();
+                newQueue.push(current);
+                cars.pop();
+                if (newCar.clr == current.clr && newCar.height == current.height && newCar.width == current.width && newCar.speed == current.speed && newCar.chr == current.chr) {
+                    control = true;
+                }
+            }
+
+        } while (control);
+
+        return newCar;
+    }
+}
+
+/* Mustafa Kazı */
+void *moveEnemyCars(void *args) {
+    while (playingGame.IsGameRunning) {
+        sleep(EnQueueSleep);
+
+        pthread_mutex_lock(&playingGame.mutexFile);
+        queue<Car> tempQueue = playingGame.cars;
+        playingGame.cars = queue<Car>();
+        pthread_mutex_unlock(&playingGame.mutexFile);
+
+        while (!tempQueue.empty()) {
+            Car car = tempQueue.front();
+            tempQueue.pop();
+            drawCar(car, 1, 1);
+            car.y += car.speed;
+
+            if (car.y < EXITY) {
+                drawCar(car, 2, 1);
+                pthread_mutex_lock(&playingGame.mutexFile);
+                playingGame.cars.push(car);
+                pthread_mutex_unlock(&playingGame.mutexFile);
+            } else {
+                playingGame.points += car.height * car.width;
+                printCurrentPoints();
             }
         }
 
-    }while(control);
-
-    return newCar;
+        usleep(DeQueueSleepMin);
     }
-    return cars.back(); ///NULL DÖNMÜYORR!!!!!!!!!!!!!!!!!!!!!!
+    pthread_exit(NULL);
+}
+
+/* Mustafa Kazı */
+void *enqueueCars(void *) {
+    while (playingGame.IsGameRunning) {
+        pthread_mutex_lock(&playingGame.mutexFile);
+        if (playingGame.cars.size() < maxCarNumber) {
+            playingGame.cars.push(generateCar(playingGame.cars));
+        }
+        pthread_mutex_unlock(&playingGame.mutexFile);
+
+        sleep(EnQueueSleep);
+    }
+    pthread_exit(NULL);
+}
+
+void printCurrentPoints() {
+    mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
+    refresh();
 }
