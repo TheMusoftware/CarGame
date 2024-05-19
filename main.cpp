@@ -117,6 +117,11 @@ Car generateCar(queue<Car> cars);
 void *moveEnemyCars(void *args);
 void *enqueueCars(void *);
 void printCurrentPoints();
+void saveGame(Game game);
+void loadLastGame();
+void saveCarsToFile(Game game);
+void readCars();
+void writeCarsToWindow(queue<Car> carQueue);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -309,7 +314,7 @@ void printMainMenu() {
 
                     case 1:
                         // Load Last Game
-
+                         loadLastGame();
                         break;
 
                     case 2:
@@ -515,7 +520,10 @@ void gameOperations(int key) {
         printMainMenu();
         refresh();
     } else if (SAVEKEY == key) {
-        //save game
+        saveGame(playingGame);
+        clear();
+        printMainMenu();
+        refresh();
     }
 }
 
@@ -641,4 +649,76 @@ void *enqueueCars(void *) {
 void printCurrentPoints() {
     mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
     refresh();
+}
+
+/*Uğur Tansal*/
+void loadLastGame()
+{
+    FILE *gameFile=fopen(gameTxt,"rb+");
+    fread(&playingGame,sizeof(Game),1,gameFile);
+    fclose(gameFile);
+    clear();
+    refresh();
+    readCars();
+    pthread_t th1;
+    pthread_create(&th1, NULL, newGame, NULL);
+    pthread_join(th1,NULL);
+
+
+}
+
+/*Uğur Tansal*/
+void saveCarsToFile(Game game)
+{
+    FILE *carsFile=fopen(CarsTxt,"wb+");
+    queue<Car> newQueue;
+    Car current;
+    while(!game.cars.empty())
+    {
+        current=game.cars.front();
+        fwrite(&current,sizeof(Car),1,carsFile);
+        newQueue.push(current);
+        game.cars.pop();
+    }
+    game.cars=newQueue;
+    fclose(carsFile);
+}
+/*Uğur Tansal*/
+void readCars()
+{
+    queue<Car> newQueue;
+    Car current;
+    FILE *carsFile=fopen(CarsTxt,"rb+");
+    fread(&current,sizeof(Car),1,carsFile);
+    while(!feof(carsFile))
+    {
+      fread(&current,sizeof(Car),1,carsFile);
+      newQueue.push(current);
+    }
+
+    writeCarsToWindow(newQueue);
+}
+/*Uğur Tansal*/
+void writeCarsToWindow(queue<Car> carQueue)
+{
+    Car car;
+    while(!carQueue.empty())
+    {
+        car=carQueue.front();
+        drawCar(car,2,0);
+        playingGame.cars.push(car);
+        carQueue.pop();
+    }
+}
+
+/*Uğur Tansal*/
+
+void saveGame(Game game)
+{
+    saveCarsToFile(game);
+    savePointFile(playingGame.points);
+    playingGame.IsSaveCliked=true;
+    FILE *gameFile = fopen(gameTxt, "wb+");
+    fwrite(&game, sizeof(game), 1, gameFile);
+    fclose(gameFile);
 }
