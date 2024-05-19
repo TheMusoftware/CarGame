@@ -547,15 +547,17 @@ Car generateCar(queue<Car> cars) {
 
         do {
             control = false;
+            newCar.y = rand() % (MINY + 1) + MINY;
+            newCar.y*=(-1);
+            newCar.height = rand() % (7 - MINH + 1) + MINH;
+            newCar.width = rand() % (7 - MINW + 1) + MINW;
             do {
-                newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
-            } while (newCar.x == lineX);
-            newCar.y = rand() % (10 + 1) - 10;
-            newCar.height = rand() % (7 - 5 + 1) + 5;
-            newCar.width = rand() % (7 - 5 + 1) + 5;
+                //newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
+                newCar.x=rand() % ( wWidth-10-MINX+1)+MINX;
+            } while ((newCar.x<=lineX && newCar.x+newCar.width>lineX) || newCar.x+newCar.width>=wWidth);
             newCar.speed = newCar.height / 2;
 
-            newCar.clr = rand() % (4 - 1 + 1) + 1;
+            newCar.clr = rand() % (numOfcolors - 1 + 1) + 1;
             newCar.isExist = false;
             chrNum = rand() % (numOfChars - 1 + 1) + 1;
             switch (chrNum) {
