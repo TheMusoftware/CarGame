@@ -582,7 +582,7 @@ Car generateCar(queue<Car> cars) {
                     control = true;
                 }
             }
-
+            playingGame.cars = newQueue;
         } while (control);
 
         return newCar;
@@ -602,11 +602,11 @@ void *moveEnemyCars(void *args) {
         while (!tempQueue.empty()) {
             Car car = tempQueue.front();
             tempQueue.pop();
-            drawCar(car, 1, 1);
+            drawCar(car, 1, 0);
             car.y += car.speed;
 
             if (car.y < EXITY) {
-                drawCar(car, 2, 1);
+                drawCar(car, 2, 0);
                 pthread_mutex_lock(&playingGame.mutexFile);
                 playingGame.cars.push(car);
                 pthread_mutex_unlock(&playingGame.mutexFile);
