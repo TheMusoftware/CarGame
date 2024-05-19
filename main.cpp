@@ -111,7 +111,7 @@ queue<int> getPoints();
 void printPoints();
 bool isMovementKey(int key);
 void moveCar(int key);
-void gameOperations (int key);
+void gameOperations(int key);
 void handleInput(int key);
 Car generateCar(queue<Car> cars);
 void *moveEnemyCars(void *args);
@@ -480,8 +480,8 @@ void printPoints() {
 }
 
 /* Mustafa Kazı */
-bool isMovementKey(int key){
-    if(playingGame.leftKey == key || playingGame.rightKey == key) return true;
+bool isMovementKey(int key) {
+    if (playingGame.leftKey == key || playingGame.rightKey == key) return true;
     return false;
 }
 /* Mustafa Kazı */
@@ -509,23 +509,21 @@ void moveCar(int key) {
 }
 
 /* Mustafa Kazı */
-void gameOperations (int key){
-    if (ESC == key){
+void gameOperations(int key) {
+    if (ESC == key) {
         clear();
         printMainMenu();
         refresh();
-    }
-    else if(SAVEKEY == key){
+    } else if (SAVEKEY == key) {
         //save game
     }
 }
 
 /* Mustafa Kazı */
-void handleInput(int key){
-    if (isMovementKey(key)){
+void handleInput(int key) {
+    if (isMovementKey(key)) {
         moveCar(key);
-    }
-    else{
+    } else {
         gameOperations(key);
     }
 }
