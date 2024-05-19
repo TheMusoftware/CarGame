@@ -109,7 +109,10 @@ void printTrees();
 void savePointFile(int point);
 queue<int> getPoints();
 void printPoints();
+bool isMovementKey(int key);
 void moveCar(int key);
+void gameOperations (int key);
+void handleInput(int key);
 Car generateCar(queue<Car> cars);
 void *moveEnemyCars(void *args);
 void *enqueueCars(void *);
@@ -157,7 +160,7 @@ void *newGame(void *) {
         printCurrentPoints();
         key = getch();// Get input for the player to press the arrow keys
         if (key != KEYERROR) {
-            moveCar(key);
+            handleInput(key);
         }
         usleep(GAMESLEEPRATE);// sleep
     }
@@ -477,6 +480,11 @@ void printPoints() {
 }
 
 /* Mustafa Kazı */
+bool isMovementKey(int key){
+    if(playingGame.leftKey == key || playingGame.rightKey == key) return true;
+    return false;
+}
+/* Mustafa Kazı */
 void moveCar(int key) {
     if (key == playingGame.leftKey) {
         drawCar(playingGame.current, 1, 1);
@@ -497,6 +505,28 @@ void moveCar(int key) {
             playingGame.current.x = 90;
         }
         drawCar(playingGame.current, 2, 1);
+    }
+}
+
+/* Mustafa Kazı */
+void gameOperations (int key){
+    if (ESC == key){
+        clear();
+        printMainMenu();
+        refresh();
+    }
+    else if(SAVEKEY == key){
+        //save game
+    }
+}
+
+/* Mustafa Kazı */
+void handleInput(int key){
+    if (isMovementKey(key)){
+        moveCar(key);
+    }
+    else{
+        gameOperations(key);
     }
 }
 
