@@ -121,6 +121,7 @@ void saveGame();
 void loadGame();
 void startGame(bool isNewGame);
 bool isValidCar(Car car);
+bool collisionCheck(Car car);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -257,7 +258,6 @@ void drawCar(Car c, int type, int direction) {
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
         attroff(COLOR_PAIR(c.clr));                 // disable color pair
-
     }
 }
 
@@ -609,6 +609,12 @@ void *moveEnemyCars(void *) {
                 drawCar(car, 2, 0);
                 if (car.y > 0) car.isExist = true;
                 playingGame.cars.push(car);
+                if (collisionCheck(car)) {
+                    playingGame.IsGameRunning = false;
+                    int point = playingGame.points;
+                    savePointFile(point);
+                   printMainMenu();
+                }
 
             } else {
                 playingGame.points += car.height * car.width;
@@ -692,7 +698,7 @@ void loadGame() {
             playingGame.cars.pop();
         }
         while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
-            if(isValidCar(car)) playingGame.cars.push(car);
+            if (isValidCar(car)) playingGame.cars.push(car);
         }
 
         fclose(gameFile);
@@ -728,13 +734,28 @@ bool isValidCar(Car car) {
     if ((car.x <= lineX && car.x + car.width > lineX) || car.x + car.width >= wWidth) return false;
     if (car.speed > car.height) return false;
     if (car.clr < 1 || car.clr > numOfcolors) return false;
-    if(car.chr != '*' && car.chr != '+' && car.chr != '#') return false;
-    if(!car.isExist) return false;
+    if (car.chr != '*' && car.chr != '+' && car.chr != '#') return false;
+    if (!car.isExist) return false;
 
     return true;
 }
 
 
 /* Mustafa Kazı */
-bool collisionCheck() {
+bool collisionCheck(Car car) {
+    int carLeft = car.x;
+    int carRight = car.x + car.width;
+    int carTop = car.y;
+    int carBottom = car.y + car.height;
+
+    int currentCarLeft = playingGame.current.x;
+    int currentCarRight = playingGame.current.x + playingGame.current.width;
+    int currentCarTop = playingGame.current.y;
+    int currentCarBottom = playingGame.current.y + playingGame.current.height;
+
+    bool collisionX = (carLeft < currentCarRight) && (carRight > currentCarLeft);
+    bool collisionY = (carTop < currentCarBottom) && (carBottom > currentCarTop);
+    bool collisionSides = (carTop <= currentCarBottom) && (carBottom >= currentCarTop);
+
+    return collisionX && collisionY || collisionSides;// OR the conditions for collision
 }
