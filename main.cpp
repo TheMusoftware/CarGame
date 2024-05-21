@@ -113,7 +113,7 @@ void gameOperations(int key);
 void handleInput(int key);
 Car generateCar(queue<Car> cars);
 void *moveEnemyCars(void *args);
-int calculateGameSpeed();
+void calculateGameSpeed();
 void checkAndIncreaseLevel();
 void *enqueueCars(void *);
 void printCurrentPoints();
@@ -615,18 +615,21 @@ void *moveEnemyCars(void *) {
             }
         }
 
-        usleep(calculateGameSpeed());
+        usleep(playingGame.moveSpeed);
     }
     pthread_exit(NULL);
 }
 /* Mustafa Kazı */
-int calculateGameSpeed() {
-    return ISPEED - (playingGame.level - 1) * 100000;
+void calculateGameSpeed() {
+    playingGame.moveSpeed -=  100000;
 }
 
 /* Mustafa Kazı */
 void checkAndIncreaseLevel() {
-    if (playingGame.points / levelBound == playingGame.level && playingGame.level != MAXSLEVEL) playingGame.level++;
+    if (playingGame.points / levelBound == playingGame.level && playingGame.level != MAXSLEVEL){
+        playingGame.level++;
+        calculateGameSpeed();
+    }
 }
 
 /* Mustafa Kazı */
