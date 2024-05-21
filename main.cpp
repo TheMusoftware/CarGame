@@ -722,33 +722,16 @@ void startGame(bool isNewGame) {
 
 /* Mustafa Kazı */
 bool isValidCar(Car car) {
-    if (car.height < MINH || car.height > 7) {
-        return false;
-    }
-    if (car.width < MINW || car.width > 7) {
-        return false;
-    }
+    if (car.height < MINH || car.height > 7) return false;
+    if (car.width < MINW || car.width > 7) return false;
+    if (car.x < MINX || car.x + car.width > wWidth - 1) return false;
+    if ((car.x <= lineX && car.x + car.width > lineX) || car.x + car.width >= wWidth) return false;
+    if (car.speed > car.height) return false;
+    if (car.clr < 1 || car.clr > numOfcolors) return false;
+    if(car.chr != '*' && car.chr != '+' && car.chr != '#') return false;
+    if(!car.isExist) return false;
 
-    if (car.x < MINX || car.x + car.width > wWidth - 1) {
-        return false;
-    }
-    if ((car.x <= lineX && car.x + car.width > lineX) || car.x + car.width >= wWidth) {
-        return false;
-    }
-
-    if (car.speed > car.height) {
-        return false;
-    }
-
-    if (car.clr < 1 || car.clr > numOfcolors) {
-        return false;
-    }
-
-    if(car.chr != '*' && car.chr != '+' && car.chr != '#'){
-        return false;
-    }
-    if(car.isExist) return true;
-
+    return true;
 }
 
 
