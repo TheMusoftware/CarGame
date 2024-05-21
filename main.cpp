@@ -54,8 +54,6 @@
 #define mainMenuItem 6      // number of options in the main menu
 /* Mustafa Kazı */
 #define instructionsItem 4// number of options in the instructions
-#define COLOR_PAIR_GREEN 1
-#define COLOR_PAIR_RED 2
 
 
 using namespace std;
@@ -115,8 +113,13 @@ void gameOperations(int key);
 void handleInput(int key);
 Car generateCar(queue<Car> cars);
 void *moveEnemyCars(void *args);
+int calculateGameSpeed();
+void checkAndIncreaseLevel();
 void *enqueueCars(void *);
 void printCurrentPoints();
+void saveGame();
+void loadGame();
+void startGame(bool isNewGame);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -143,7 +146,7 @@ void initGame() {
     playingGame.current.chr = '*';
 }
 
-void *newGame(void *) {
+void *newGame(void *args) {
     if (playingGame.leftKey != leftKeyA) {
         playingGame.leftKey = leftKeyArrow;
         playingGame.rightKey = RightKeyArrow;
@@ -201,39 +204,33 @@ void printWindow() {
 /*Ugur Tansal*/
 void printTrees() {
     for (int i = 5; i < wHeight - 10; i += 10) {
-        attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+        attron(COLOR_PAIR(1));
         mvprintw(i, wWidth + 6, "*");
         mvprintw(i + 1, wWidth + 5, "*");
         mvprintw(i + 1, wWidth + 7, "*");
         mvprintw(i + 2, wWidth + 4, "*");
         mvprintw(i + 2, wWidth + 6, "*");
         mvprintw(i + 2, wWidth + 8, "*");
-        attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
-        attron(COLOR_PAIR(COLOR_PAIR_RED));
+        attroff(COLOR_PAIR(1));
+        attron(COLOR_PAIR(2));
         mvprintw(i + 3, wWidth + 6, "#");
         mvprintw(i + 4, wWidth + 6, "#");
-        attroff(COLOR_PAIR(COLOR_PAIR_RED));
+        attroff(COLOR_PAIR(2));
     }
 }
 
 void drawCar(Car c, int type, int direction) {
     //If the user does not want to exit the game and the game continues
     if (playingGame.IsSaveCliked != true && playingGame.IsGameRunning == true) {
-        init_pair(c.ID, c.clr,
-                  0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
-        //0: Black (COLOR_BLACK)
-        //1: Red (COLOR_RED)
-        //2: Green (COLOR_GREEN)
-        //3: Yellow (COLOR_YELLOW)
-        //4: Blue (COLOR_BLUE)
-        attron(COLOR_PAIR(c.ID));//enable color pair
+
+        attron(COLOR_PAIR(c.clr));//enable color pair
         char drawnChar;
         if (type == 1)
             drawnChar = ' ';// to remove car
         else
             drawnChar = c.chr;//  to draw char
         //mvhline: used to draw a horizontal line in the window
-        //shallow. : mvhline(int y, int x, chtype ch, int n)
+        //shallow : mvhline(int y, int x, chtype ch, int n)
         //y: horizontal coordinate
         //x: vertical coordinate
         //ch: character to use
@@ -245,7 +242,7 @@ void drawCar(Car c, int type, int direction) {
         else//player's card
             mvhline(c.y - 1, c.x, drawnChar, c.width);
         //mvvline: used to draw a vertical line in the window
-        //shallow. : mvhline(int y, int x, chtype ch, int n)
+        //shallow : mvhline(int y, int x, chtype ch, int n)
         //y: horizontal coordinate
         //x: vertical coordinate
         //ch: character to use
@@ -258,7 +255,7 @@ void drawCar(Car c, int type, int direction) {
         else
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
-        attroff(COLOR_PAIR(c.ID));                  // disable color pair
+        attroff(COLOR_PAIR(c.clr));                 // disable color pair
     }
 }
 
@@ -271,14 +268,14 @@ void printMainMenu() {
         clear();// Clear screen
         // Print menu items
         for (int i = 0; i < mainMenuItem; i++) {
-            attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+            attron(COLOR_PAIR(1));
 
             if (i == selected_menu_item) {
-                attron(COLOR_PAIR(COLOR_PAIR_RED));
+                attron(COLOR_PAIR(2));
                 mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             }
             mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", mainMenu[i]);
-            attroff(COLOR_PAIR(COLOR_PAIR_RED));
+            attroff(COLOR_PAIR(2));
         }
         int ch = getch();
 
@@ -299,17 +296,11 @@ void printMainMenu() {
                 switch (selected_menu_item) {
                     pthread_t thMenu;
                     case 0:
-                        initGame();
-                        initWindow();
-                        pthread_t th1;                            //create new thread
-                        pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
-                        pthread_join(th1,
-                                     NULL);//Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+                        startGame(true);// start new game
                         break;
 
                     case 1:
-                        // Load Last Game
-
+                        startGame(false);// load last game
                         break;
 
                     case 2:
@@ -341,7 +332,7 @@ void printMainMenu() {
 void *printInstructors(void *) {
     clear();
     for (int i = 0; i < instructionsItem; i++) {
-        attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+        attron(COLOR_PAIR(1));
         mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", instructors[i]);
     }
     refresh();
@@ -358,14 +349,14 @@ void *printSettings(void *) {
         clear();
         for (int i = 0; i < settingMenuItem; i++) {
             if (i == selected_item) {
-                attron(COLOR_PAIR(COLOR_PAIR_RED));
+                attron(COLOR_PAIR(2));
                 mvprintw(MENUY + MENUDIF * i, MENUX - 2, "->");// -2 For '->' symbol
             } else {
-                attron(COLOR_PAIR(COLOR_PAIR_GREEN));
+                attron(COLOR_PAIR(1));
             }
             mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", settingMenu[i]);
-            attroff(COLOR_PAIR(COLOR_PAIR_GREEN));
-            attroff(COLOR_PAIR(COLOR_PAIR_RED));
+            attroff(COLOR_PAIR(1));
+            attroff(COLOR_PAIR(2));
         }
         refresh();
 
@@ -405,8 +396,10 @@ void *printSettings(void *) {
 
 /* Mustafa Kazı */
 void loadColorPair() {
-    init_pair(COLOR_PAIR_GREEN, COLOR_GREEN, COLOR_BLACK);
-    init_pair(COLOR_PAIR_RED, COLOR_RED, COLOR_BLACK);
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(4, COLOR_BLUE, COLOR_BLACK);
 }
 
 /*Ugur Tansal*/
@@ -511,11 +504,17 @@ void moveCar(int key) {
 /* Mustafa Kazı */
 void gameOperations(int key) {
     if (ESC == key) {
+        playingGame.IsGameRunning = false;
         clear();
         printMainMenu();
         refresh();
     } else if (SAVEKEY == key) {
-        //save game
+        playingGame.IsSaveCliked = true;
+        playingGame.IsGameRunning = false;
+        saveGame();
+        clear();
+        printMainMenu();
+        refresh();
     }
 }
 
@@ -548,13 +547,13 @@ Car generateCar(queue<Car> cars) {
         do {
             control = false;
             newCar.y = rand() % (MINY + 1) + MINY;
-            newCar.y*=(-1);
+            newCar.y *= (-1);
             newCar.height = rand() % (7 - MINH + 1) + MINH;
             newCar.width = rand() % (7 - MINW + 1) + MINW;
             do {
                 //newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
-                newCar.x=rand() % ( wWidth-10-MINX+1)+MINX;
-            } while ((newCar.x<=lineX && newCar.x+newCar.width>lineX) || newCar.x+newCar.width>=wWidth);
+                newCar.x = rand() % (wWidth - 10 - MINX + 1) + MINX;
+            } while ((newCar.x <= lineX && newCar.x + newCar.width > lineX) || newCar.x + newCar.width >= wWidth);
             newCar.speed = newCar.height / 2;
 
             newCar.clr = rand() % (numOfcolors - 1 + 1) + 1;
@@ -592,14 +591,11 @@ Car generateCar(queue<Car> cars) {
 }
 
 /* Mustafa Kazı */
-void *moveEnemyCars(void *args) {
+void *moveEnemyCars(void *) {
     while (playingGame.IsGameRunning) {
-        sleep(EnQueueSleep);
 
-        pthread_mutex_lock(&playingGame.mutexFile);
         queue<Car> tempQueue = playingGame.cars;
         playingGame.cars = queue<Car>();
-        pthread_mutex_unlock(&playingGame.mutexFile);
 
         while (!tempQueue.empty()) {
             Car car = tempQueue.front();
@@ -609,28 +605,37 @@ void *moveEnemyCars(void *args) {
 
             if (car.y < EXITY) {
                 drawCar(car, 2, 0);
-                pthread_mutex_lock(&playingGame.mutexFile);
+
                 playingGame.cars.push(car);
-                pthread_mutex_unlock(&playingGame.mutexFile);
+
             } else {
                 playingGame.points += car.height * car.width;
                 printCurrentPoints();
+                checkAndIncreaseLevel();
             }
         }
 
-        usleep(DeQueueSleepMin);
+        usleep(calculateGameSpeed());
     }
     pthread_exit(NULL);
+}
+/* Mustafa Kazı */
+int calculateGameSpeed() {
+    return ISPEED - (playingGame.level - 1) * 100000;
+}
+
+/* Mustafa Kazı */
+void checkAndIncreaseLevel() {
+    if (playingGame.points / levelBound == playingGame.level && playingGame.level != MAXSLEVEL) playingGame.level++;
 }
 
 /* Mustafa Kazı */
 void *enqueueCars(void *) {
     while (playingGame.IsGameRunning) {
-        pthread_mutex_lock(&playingGame.mutexFile);
+
         if (playingGame.cars.size() < maxCarNumber) {
             playingGame.cars.push(generateCar(playingGame.cars));
         }
-        pthread_mutex_unlock(&playingGame.mutexFile);
 
         sleep(EnQueueSleep);
     }
@@ -639,6 +644,73 @@ void *enqueueCars(void *) {
 
 /* Mustafa Kazı */
 void printCurrentPoints() {
-    mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
-    refresh();
+    if (playingGame.points != 0) {
+        mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
+        refresh();
+    }
+}
+
+/* Mustafa Kazı */
+void saveGame() {
+    FILE *gameFile = fopen(gameTxt, "wb");
+    FILE *carsFile = fopen(CarsTxt, "wb");
+
+    if (gameFile != NULL && carsFile != NULL) {
+        pthread_mutex_lock(&playingGame.mutexFile);
+        fwrite(&playingGame, sizeof(Game), 1, gameFile);
+        queue<Car> cars = playingGame.cars;
+        while (!cars.empty()) {
+            Car car = cars.front();
+            cars.pop();
+            fwrite(&car, sizeof(Car), 1, carsFile);
+        }
+        pthread_mutex_unlock(&playingGame.mutexFile);
+        fclose(gameFile);
+        fclose(carsFile);
+    }
+}
+
+/* Mustafa Kazı */
+void loadGame() {
+    FILE *gameFile = fopen(gameTxt, "rb");
+    FILE *carsFile = fopen(CarsTxt, "rb");
+    pthread_mutex_destroy(&playingGame.mutexFile);
+    if (gameFile != NULL && carsFile != NULL) {
+
+        fread(&playingGame, sizeof(Game), 1, gameFile);
+
+        Car car;
+
+        queue<Car> lastCars;
+        while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
+            lastCars.push(car);
+        }
+
+        fclose(gameFile);
+        fclose(carsFile);
+
+
+    } else {
+        if (gameFile != NULL) fclose(gameFile);
+        if (carsFile != NULL) fclose(carsFile);
+    }
+}
+
+/* Mustafa Kazı */
+void startGame(bool isNewGame) {
+    if (isNewGame) {
+        initGame();
+    } else {
+        loadGame();
+        playingGame.IsGameRunning = true;
+        playingGame.IsSaveCliked = false;
+    }
+    initWindow();
+    pthread_t th1;                            //create new thread
+    pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
+    pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+}
+
+/* Mustafa Kazı */
+bool collisionCheck() {
 }
