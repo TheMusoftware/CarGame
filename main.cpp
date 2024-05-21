@@ -120,6 +120,7 @@ void printCurrentPoints();
 void saveGame();
 void loadGame();
 void startGame(bool isNewGame);
+bool isValidCar(Car car);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -256,6 +257,7 @@ void drawCar(Car c, int type, int direction) {
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
         attroff(COLOR_PAIR(c.clr));                 // disable color pair
+
     }
 }
 
@@ -605,11 +607,12 @@ void *moveEnemyCars(void *) {
 
             if (car.y < EXITY) {
                 drawCar(car, 2, 0);
-
+                if (car.y > 0) car.isExist = true;
                 playingGame.cars.push(car);
 
             } else {
                 playingGame.points += car.height * car.width;
+                car.isExist = false;
                 printCurrentPoints();
                 checkAndIncreaseLevel();
             }
@@ -621,12 +624,13 @@ void *moveEnemyCars(void *) {
 }
 /* Mustafa Kazı */
 void calculateGameSpeed() {
-    playingGame.moveSpeed -=  100000;
+    usleep(DRATESPEED);
+    playingGame.moveSpeed -= 100000;
 }
 
 /* Mustafa Kazı */
 void checkAndIncreaseLevel() {
-    if (playingGame.points / levelBound == playingGame.level && playingGame.level != MAXSLEVEL){
+    if (playingGame.points / levelBound == playingGame.level && playingGame.level != MAXSLEVEL) {
         playingGame.level++;
         calculateGameSpeed();
     }
@@ -677,21 +681,23 @@ void saveGame() {
 void loadGame() {
     FILE *gameFile = fopen(gameTxt, "rb");
     FILE *carsFile = fopen(CarsTxt, "rb");
-    pthread_mutex_destroy(&playingGame.mutexFile);
-    if (gameFile != NULL && carsFile != NULL) {
 
+    if (gameFile != NULL && carsFile != NULL) {
+        pthread_mutex_lock(&playingGame.mutexFile);
         fread(&playingGame, sizeof(Game), 1, gameFile);
 
         Car car;
 
-        queue<Car> lastCars;
+        while (!playingGame.cars.empty()) {// Clear existing cars
+            playingGame.cars.pop();
+        }
         while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
-            lastCars.push(car);
+            if(isValidCar(car)) playingGame.cars.push(car);
         }
 
         fclose(gameFile);
         fclose(carsFile);
-
+        pthread_mutex_unlock(&playingGame.mutexFile);
 
     } else {
         if (gameFile != NULL) fclose(gameFile);
@@ -713,6 +719,38 @@ void startGame(bool isNewGame) {
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
 }
+
+/* Mustafa Kazı */
+bool isValidCar(Car car) {
+    if (car.height < MINH || car.height > 7) {
+        return false;
+    }
+    if (car.width < MINW || car.width > 7) {
+        return false;
+    }
+
+    if (car.x < MINX || car.x + car.width > wWidth - 1) {
+        return false;
+    }
+    if ((car.x <= lineX && car.x + car.width > lineX) || car.x + car.width >= wWidth) {
+        return false;
+    }
+
+    if (car.speed > car.height) {
+        return false;
+    }
+
+    if (car.clr < 1 || car.clr > numOfcolors) {
+        return false;
+    }
+
+    if(car.chr != '*' && car.chr != '+' && car.chr != '#'){
+        return false;
+    }
+    if(car.isExist) return true;
+
+}
+
 
 /* Mustafa Kazı */
 bool collisionCheck() {
