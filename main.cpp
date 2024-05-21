@@ -224,14 +224,8 @@ void printTrees() {
 void drawCar(Car c, int type, int direction) {
     //If the user does not want to exit the game and the game continues
     if (playingGame.IsSaveCliked != true && playingGame.IsGameRunning == true) {
-        init_pair(c.ID, c.clr,
-                  0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
-        //0: Black (COLOR_BLACK)
-        //1: Red (COLOR_RED)
-        //2: Green (COLOR_GREEN)
-        //3: Yellow (COLOR_YELLOW)
-        //4: Blue (COLOR_BLUE)
-        attron(COLOR_PAIR(c.ID));//enable color pair
+
+        attron(COLOR_PAIR(c.clr));//enable color pair
         char drawnChar;
         if (type == 1)
             drawnChar = ' ';// to remove car
@@ -263,7 +257,7 @@ void drawCar(Car c, int type, int direction) {
         else
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
-        attroff(COLOR_PAIR(c.ID));                  // disable color pair
+        attroff(COLOR_PAIR(c.clr));                  // disable color pair
     }
 }
 
@@ -412,6 +406,9 @@ void *printSettings(void *) {
 void loadColorPair() {
     init_pair(COLOR_PAIR_GREEN, COLOR_GREEN, COLOR_BLACK);
     init_pair(COLOR_PAIR_RED, COLOR_RED, COLOR_BLACK);
+    init_pair(3,COLOR_YELLOW,COLOR_BLACK);
+    init_pair(4,COLOR_BLUE,COLOR_BLACK);
+
 }
 
 /*Ugur Tansal*/
@@ -626,7 +623,7 @@ void *moveEnemyCars(void *args) {
             }
         }
 
-        usleep(DeQueueSleepMin);
+
     }
     pthread_exit(NULL);
 }
