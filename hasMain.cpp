@@ -597,38 +597,56 @@ Car generateCar(queue<Car> cars) {
 /* Mustafa Kazı */
 void *moveEnemyCars(void *args) {
 
-
-    while (playingGame.IsGameRunning) {
+while (playingGame.IsGameRunning) {
 
             Car* car =(Car* )args;
-             car->y += car->speed;
 
-            if (car->y > 0) car->isExist = true;
+            Car car2;
+            car2.chr=car->chr;
+            car2.clr=car->clr;
+            car2.height=car->height;
+            car2.ID=car->ID;
+            car2.speed=car->speed;
+            car2.width=car->width;
+            car2.x=car->x;
+            car2.y=car->y;
 
-            while(car->isExist){
 
-                drawCar(*car, 1, 0);
-                car->y += car->speed;
-            if (car->y < EXITY) {
-                drawCar(*car, 2, 0);
 
-                if (collisionCheck(*car)) {
+                car2.isExist=true;
+             //car2.y += car2.speed;
+
+
+
+
+            while(car2.isExist){
+
+                drawCar(car2, 1, 0);
+                car2.y += car2.speed;
+            if (car2.y < EXITY) {
+
+                drawCar(car2, 2, 0);
+/*
+                if (collisionCheck(car)) {
                     playingGame.IsGameRunning = false;
                    printMainMenu();
                 }
 
+*/
             } else {
-                playingGame.points += car->height * car->width;
-                car->isExist = false;
+                playingGame.points += car2.height * car2.width;
+                car2.isExist = false;
                 printCurrentPoints();
                 checkAndIncreaseLevel();
+               // pthread_join(pthread_self(),NULL);
             }
 
              usleep(playingGame.moveSpeed);
 
         }
+         pthread_exit(NULL);
     }
-    pthread_exit(NULL);
+
 }
 /* Mustafa Kazı */
 void calculateGameSpeed() {
