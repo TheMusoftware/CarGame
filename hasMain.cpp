@@ -158,8 +158,8 @@ void *newGame(void *args) {
     printWindow();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
 
-    pthread_t  thEnqueueCars,thDequeueCars;
-    pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);    // Start the thread to enqueue new cars
+    pthread_t thEnqueueCars, thDequeueCars;
+    pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);// Start the thread to enqueue new cars
     pthread_create(&thDequeueCars, NULL, dequeueCar, NULL);
 
 
@@ -484,25 +484,28 @@ bool isMovementKey(int key) {
 }
 /* Mustafa Kazı */
 void moveCar(int key) {
-    if (key == playingGame.leftKey) {
-        drawCar(playingGame.current, 1, 1);
+    if(playingGame.current.x < 90 || playingGame.current.x > 5) {
 
-        if ((playingGame.current.x - playingGame.current.speed) > 5) {
-            playingGame.current.x -= playingGame.current.speed;
-        } else {
-            playingGame.current.x = 5;
+        if (key == playingGame.leftKey) {
+            drawCar(playingGame.current, 1, 1);
+
+            if ((playingGame.current.x - playingGame.current.speed) > 5) {
+                playingGame.current.x -= playingGame.current.speed;
+            } else {
+                playingGame.current.x = 5;
+            }
+
+            drawCar(playingGame.current, 2, 1);
+        } else if (key == playingGame.rightKey) {
+            drawCar(playingGame.current, 1, 1);
+
+            if ((playingGame.current.x + playingGame.current.speed) < 90) {
+                playingGame.current.x += playingGame.current.speed;
+            } else {
+                playingGame.current.x = 90;
+            }
+            drawCar(playingGame.current, 2, 1);
         }
-
-        drawCar(playingGame.current, 2, 1);
-    } else if (key == playingGame.rightKey) {
-        drawCar(playingGame.current, 1, 1);
-
-        if ((playingGame.current.x + playingGame.current.speed) < 90) {
-            playingGame.current.x += playingGame.current.speed;
-        } else {
-            playingGame.current.x = 90;
-        }
-        drawCar(playingGame.current, 2, 1);
     }
 }
 
@@ -578,7 +581,7 @@ Car generateCar(queue<Car> cars) {
                     break;
             }
 
-            queue <Car> newQueue = playingGame.cars;
+            queue<Car> newQueue = playingGame.cars;
             Car current;
             while (!newQueue.empty()) {
                 current = newQueue.front();
@@ -597,54 +600,49 @@ Car generateCar(queue<Car> cars) {
 /* Mustafa Kazı */
 void *moveEnemyCars(void *args) {
 
-while (playingGame.IsGameRunning) {
+    while (playingGame.IsGameRunning) {
 
-            Car* car =(Car* )args;
+        Car *car = (Car *) args;
 
-            Car car2;
-            car2.chr=car->chr;
-            car2.clr=car->clr;
-            car2.height=car->height;
-            car2.ID=car->ID;
-            car2.speed=car->speed;
-            car2.width=car->width;
-            car2.x=car->x;
-            car2.y=car->y;
-
-
-
-                car2.isExist=true;
-             //car2.y += car2.speed;
+        Car car2;
+        car2.chr = car->chr;
+        car2.clr = car->clr;
+        car2.height = car->height;
+        car2.ID = car->ID;
+        car2.speed = car->speed;
+        car2.width = car->width;
+        car2.x = car->x;
+        car2.y = car->y;
 
 
+        car2.isExist = true;
+        //car2.y += car2.speed;
 
 
-            while(car2.isExist){
+        while (car2.isExist) {
 
-                drawCar(car2, 1, 0);
-                car2.y += car2.speed;
+            drawCar(car2, 1, 0);
+            car2.y += car2.speed;
             if (car2.y < EXITY) {
 
                 drawCar(car2, 2, 0);
-/*
-                if (collisionCheck(car)) {
+
+                if (collisionCheck(car2)) {
                     playingGame.IsGameRunning = false;
-                   printMainMenu();
                 }
 
-*/
+
             } else {
                 playingGame.points += car2.height * car2.width;
                 car2.isExist = false;
                 printCurrentPoints();
                 checkAndIncreaseLevel();
-               // pthread_join(pthread_self(),NULL);
+                // pthread_join(pthread_self(),NULL);
             }
 
-             usleep(playingGame.moveSpeed);
-
+            usleep(playingGame.moveSpeed);
         }
-         pthread_exit(NULL);
+        pthread_exit(pthread_self());
     }
 
 }
@@ -674,22 +672,17 @@ void *enqueueCars(void *) {
     pthread_exit(NULL);
 }
 
-void *dequeueCar(void *)
-{
-    while(playingGame.IsGameRunning)
-    {
-        if(!playingGame.cars.empty())
-        {
-            Car frontCar=playingGame.cars.front();
+void *dequeueCar(void *) {
+    while (playingGame.IsGameRunning) {
+        if (!playingGame.cars.empty()) {
+            Car frontCar = playingGame.cars.front();
             playingGame.cars.pop();
             pthread_t thMoveEnemyCar;
-            pthread_create(&thMoveEnemyCar,NULL,moveEnemyCars,(void *)&frontCar);
-
+            pthread_create(&thMoveEnemyCar, NULL, moveEnemyCars, (void *) &frontCar);
         }
-        sleep(DeQueueSleepMin+2);
-
+        sleep(DeQueueSleepMin + 2);
     }
-     pthread_exit(NULL);
+    pthread_exit(NULL);
 }
 
 /* Mustafa Kazı */
@@ -761,6 +754,7 @@ void startGame(bool isNewGame) {
     pthread_t th1;                            //create new thread
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+   // printMainMenu();
 }
 
 /* Mustafa Kazı */
@@ -780,7 +774,7 @@ bool isValidCar(Car car) {
 
 /* Mustafa Kazı */
 bool collisionCheck(Car car) {
-     int carLeft = car.x;
+    int carLeft = car.x;
     int carRight = car.x + car.width;
     int carTop = car.y;
     int carBottom = car.y + car.height;
@@ -794,5 +788,5 @@ bool collisionCheck(Car car) {
     bool collisionY = (carTop < currentCarBottom) && (carBottom > currentCarTop);
     bool collisionSides = (carTop <= currentCarBottom) && (carBottom >= currentCarTop);
 
-    return collisionX && collisionY&& collisionSides;// OR the conditions for collision
+    return collisionX && collisionY && collisionSides;// OR the conditions for collision
 }
