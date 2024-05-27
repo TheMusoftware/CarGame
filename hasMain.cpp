@@ -632,7 +632,6 @@ void *moveEnemyCars(void *args) {
             pthread_mutex_unlock(&playingGame.mutexFile);
 
             car2.isExist = false;
-            printCurrentPoints();
             checkAndIncreaseLevel();
         }
 
@@ -681,7 +680,8 @@ void *dequeueCar(void *) {
             playingGame.cars.pop();
             pthread_t thMoveEnemyCar;
             pthread_create(&thMoveEnemyCar, NULL, moveEnemyCars, (void *) &frontCar);
-            pthread_detach(thMoveEnemyCar);// Detach the thread to let it run independently
+            pthread_detach(thMoveEnemyCar);
+            printCurrentPoints();
         }
         sleep(DeQueueSleepMin + 2);
     }
@@ -690,6 +690,7 @@ void *dequeueCar(void *) {
 
 /* Mustafa Kazı */
 void printCurrentPoints() {
+    for (int i = POINTX; i < POINTX + 20; i++) mvprintw(POINTY, i, " ");
     if (playingGame.points != 0) {
         mvprintw(POINTY, POINTX, "Points: %d", playingGame.points);
         refresh();
