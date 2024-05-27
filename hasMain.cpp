@@ -122,9 +122,11 @@ void saveGame();
 void saveCar(Car car);
 void loadGame();
 void startGame(bool isNewGame);
+void resetFiles();
 bool isValidCar(Car car);
 bool collisionCheck(Car car);
 
+void printDebugInf(char text[100]);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -173,10 +175,9 @@ void *newGame(void *args) {
         }
         usleep(GAMESLEEPRATE);// sleep
     }
+
     pthread_join(thEnqueueCars, NULL);
     pthread_join(thDequeueCars, NULL);
-
-
     pthread_exit(NULL);
 }
 
@@ -228,8 +229,13 @@ void printTrees() {
 void drawCar(Car c, int type, int direction) {
     //If the user does not want to exit the game and the game continues
     if (playingGame.IsSaveCliked != true && playingGame.IsGameRunning == true) {
-
-        attron(COLOR_PAIR(c.clr));//enable color pair
+        init_pair(c.ID, c.clr, 0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
+                //0: Black (COLOR_BLACK)
+                //1: Red (COLOR_RED)
+                //2: Green (COLOR_GREEN)
+                //3: Yellow (COLOR_YELLOW)
+                //4: Blue (COLOR_BLUE)
+        attron(COLOR_PAIR(c.ID));//enable color pair
         char drawnChar;
         if (type == 1)
             drawnChar = ' ';// to remove car
@@ -261,7 +267,7 @@ void drawCar(Car c, int type, int direction) {
         else
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
-        attroff(COLOR_PAIR(c.clr));                 // disable color pair
+        attroff(COLOR_PAIR(c.ID));                 // disable color pair
     }
 }
 
@@ -521,6 +527,7 @@ void gameOperations(int key) {
     } else if (SAVEKEY == key) {
         playingGame.IsSaveCliked = true;
         playingGame.IsGameRunning = false;
+        resetFiles();
         saveGame();
         clear();
         printMainMenu();
@@ -542,6 +549,7 @@ Car generateCar(queue<Car> cars) {
     if (playingGame.cars.size() < maxCarNumber) {
 
         Car newCar;
+        /*
         if (playingGame.cars.empty()) {
             newCar.ID = IDSTART;
         } else if (playingGame.cars.back().ID < IDMAX) {
@@ -549,7 +557,8 @@ Car generateCar(queue<Car> cars) {
         } else {
             newCar.ID = IDSTART;
         }
-
+*/
+        newCar.ID=playingGame.counter++;
         srand(time(NULL));
         int chrNum;          //Random number for character
         bool control = false;//If the values uniquely
@@ -623,10 +632,9 @@ void *moveEnemyCars(void *args) {
 
             if (collisionCheck(car2)) {
                 playingGame.IsGameRunning = false;
-                break;// Exit the loop if a collision is detected
+                break;
             }
         } else {
-            // Update points safely
             pthread_mutex_lock(&playingGame.mutexFile);
             playingGame.points += car2.height * car2.width;
             pthread_mutex_unlock(&playingGame.mutexFile);
@@ -664,7 +672,6 @@ void checkAndIncreaseLevel() {
 /* Mustafa Kazı */
 void *enqueueCars(void *) {
     while (playingGame.IsGameRunning) {
-
         if (playingGame.cars.size() < maxCarNumber) {
             playingGame.cars.push(generateCar(playingGame.cars));
         }
@@ -709,6 +716,7 @@ void saveGame() {
 void saveCar(Car car) {
     FILE *carsFile = fopen(CarsTxt, "ab+");
     fwrite(&car, sizeof(Car), 1, carsFile);
+    fclose(carsFile);
 }
 
 /* Mustafa Kazı */
@@ -718,19 +726,28 @@ void loadGame() {
 
     if (gameFile != NULL && carsFile != NULL) {
         pthread_mutex_lock(&playingGame.mutexFile);
+
         fread(&playingGame, sizeof(Game), 1, gameFile);
+        fclose(gameFile);
+
+        playingGame.IsGameRunning = true;
+        playingGame.IsSaveCliked = false;
 
         Car car;
-
-        while (!playingGame.cars.empty()) {// Clear existing cars
-            playingGame.cars.pop();
-        }
         while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
-            if (isValidCar(car)) playingGame.cars.push(car);
+            if (isValidCar(car)) {
+                pthread_t thCar;
+                Car *carCopy = (Car *) malloc(sizeof(Car));
+                if (carCopy != NULL) {
+                    *carCopy = car;
+                    pthread_create(&thCar, NULL, moveEnemyCars, (void *)carCopy);
+                    pthread_detach(thCar);
+                }
+            }
         }
 
-        fclose(gameFile);
         fclose(carsFile);
+
         pthread_mutex_unlock(&playingGame.mutexFile);
 
     } else {
@@ -742,18 +759,23 @@ void loadGame() {
 
 /* Mustafa Kazı */
 void startGame(bool isNewGame) {
+    clear();
+    initWindow();
     if (isNewGame) {
         initGame();
     } else {
         loadGame();
-        playingGame.IsGameRunning = true;
-        playingGame.IsSaveCliked = false;
+        refresh();
     }
-    initWindow();
     pthread_t th1;                            //create new thread
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
-                                              // printMainMenu();
+}
+
+/* Mustafa Kazı */
+void resetFiles(){
+    fclose(fopen(gameTxt,"wb"));
+    fclose(fopen(CarsTxt,"wb"));
 }
 
 /* Mustafa Kazı */
@@ -788,4 +810,11 @@ bool collisionCheck(Car car) {
     bool collisionSides = (carTop <= currentCarBottom) && (carBottom >= currentCarTop);
 
     return collisionX && collisionY && collisionSides;// OR the conditions for collision
+}
+
+void printDebugInf(char text[100]){
+    clear();
+    mvprintw(20,20,text);
+    refresh();
+    sleep(3);
 }
