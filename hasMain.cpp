@@ -119,6 +119,7 @@ void *enqueueCars(void *);
 void *dequeueCar(void *);
 void printCurrentPoints();
 void saveGame();
+void saveCar(Car car);
 void loadGame();
 void startGame(bool isNewGame);
 bool isValidCar(Car car);
@@ -477,14 +478,14 @@ void printPoints() {
     endwin();
 }
 
-/* Mustafa Kazı */
+/*  Mustafa Kazı */
 bool isMovementKey(int key) {
     if (playingGame.leftKey == key || playingGame.rightKey == key) return true;
     return false;
 }
 /* Mustafa Kazı */
 void moveCar(int key) {
-    if(playingGame.current.x < 90 || playingGame.current.x > 5) {
+    if (playingGame.current.x < 90 || playingGame.current.x > 5) {
 
         if (key == playingGame.leftKey) {
             drawCar(playingGame.current, 1, 1);
@@ -513,6 +514,7 @@ void moveCar(int key) {
 void gameOperations(int key) {
     if (ESC == key) {
         playingGame.IsGameRunning = false;
+        playingGame.cars = queue<Car>();
         clear();
         printMainMenu();
         refresh();
@@ -599,53 +601,53 @@ Car generateCar(queue<Car> cars) {
 
 /* Mustafa Kazı */
 void *moveEnemyCars(void *args) {
+    Car *car = (Car *) args;
 
-    while (playingGame.IsGameRunning) {
+    Car car2;
+    car2.chr = car->chr;
+    car2.clr = car->clr;
+    car2.height = car->height;
+    car2.ID = car->ID;
+    car2.speed = car->speed;
+    car2.width = car->width;
+    car2.x = car->x;
+    car2.y = car->y;
+    car2.isExist = true;
 
-        Car *car = (Car *) args;
+    while (playingGame.IsGameRunning && car2.isExist) {
+        drawCar(car2, 1, 0);
+        car2.y += 1 + rand() % car2.speed;
 
-        Car car2;
-        car2.chr = car->chr;
-        car2.clr = car->clr;
-        car2.height = car->height;
-        car2.ID = car->ID;
-        car2.speed = car->speed;
-        car2.width = car->width;
-        car2.x = car->x;
-        car2.y = car->y;
+        if (car2.y < EXITY) {
+            drawCar(car2, 2, 0);
 
-
-        car2.isExist = true;
-        //car2.y += car2.speed;
-
-
-        while (car2.isExist) {
-
-            drawCar(car2, 1, 0);
-            car2.y += car2.speed;
-            if (car2.y < EXITY) {
-
-                drawCar(car2, 2, 0);
-
-                if (collisionCheck(car2)) {
-                    playingGame.IsGameRunning = false;
-                }
-
-
-            } else {
-                playingGame.points += car2.height * car2.width;
-                car2.isExist = false;
-                printCurrentPoints();
-                checkAndIncreaseLevel();
-                // pthread_join(pthread_self(),NULL);
+            if (collisionCheck(car2)) {
+                playingGame.IsGameRunning = false;
+                break;// Exit the loop if a collision is detected
             }
+        } else {
+            // Update points safely
+            pthread_mutex_lock(&playingGame.mutexFile);
+            playingGame.points += car2.height * car2.width;
+            pthread_mutex_unlock(&playingGame.mutexFile);
 
-            usleep(playingGame.moveSpeed);
+            car2.isExist = false;
+            printCurrentPoints();
+            checkAndIncreaseLevel();
         }
-        pthread_exit(pthread_self());
+
+        usleep(playingGame.moveSpeed);
     }
 
+    if (playingGame.IsSaveCliked) {
+        pthread_mutex_lock(&playingGame.mutexFile);
+        saveCar(car2);
+        pthread_mutex_unlock(&playingGame.mutexFile);
+    }
+
+    pthread_exit(NULL);
 }
+
 /* Mustafa Kazı */
 void calculateGameSpeed() {
     usleep(DRATESPEED);
@@ -679,6 +681,7 @@ void *dequeueCar(void *) {
             playingGame.cars.pop();
             pthread_t thMoveEnemyCar;
             pthread_create(&thMoveEnemyCar, NULL, moveEnemyCars, (void *) &frontCar);
+            pthread_detach(thMoveEnemyCar);// Detach the thread to let it run independently
         }
         sleep(DeQueueSleepMin + 2);
     }
@@ -696,21 +699,15 @@ void printCurrentPoints() {
 /* Mustafa Kazı */
 void saveGame() {
     FILE *gameFile = fopen(gameTxt, "wb");
-    FILE *carsFile = fopen(CarsTxt, "wb");
-
-    if (gameFile != NULL && carsFile != NULL) {
-        pthread_mutex_lock(&playingGame.mutexFile);
+    if (gameFile != NULL) {
         fwrite(&playingGame, sizeof(Game), 1, gameFile);
-        queue<Car> cars = playingGame.cars;
-        while (!cars.empty()) {
-            Car car = cars.front();
-            cars.pop();
-            fwrite(&car, sizeof(Car), 1, carsFile);
-        }
-        pthread_mutex_unlock(&playingGame.mutexFile);
         fclose(gameFile);
-        fclose(carsFile);
     }
+}
+/* Mustafa Kazı */
+void saveCar(Car car) {
+    FILE *carsFile = fopen(CarsTxt, "ab+");
+    fwrite(&car, sizeof(Car), 1, carsFile);
 }
 
 /* Mustafa Kazı */
@@ -741,6 +738,7 @@ void loadGame() {
     }
 }
 
+
 /* Mustafa Kazı */
 void startGame(bool isNewGame) {
     if (isNewGame) {
@@ -754,7 +752,7 @@ void startGame(bool isNewGame) {
     pthread_t th1;                            //create new thread
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
-   // printMainMenu();
+                                              // printMainMenu();
 }
 
 /* Mustafa Kazı */
