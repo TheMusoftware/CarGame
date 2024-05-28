@@ -156,10 +156,12 @@ void initGame() {
 }
 
 void *newGame(void *args) {
+
     if (playingGame.leftKey != leftKeyA) {
         playingGame.leftKey = leftKeyArrow;
         playingGame.rightKey = RightKeyArrow;
     }
+
     printWindow();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
 
@@ -196,6 +198,7 @@ void initWindow() {
 }
 
 void printWindow() {
+
     for (int i = 1; i < wHeight - 1; ++i) {
         //mvprintw: Used to print text on the window, paramters order: y , x , string
         mvprintw(i, 2, "*");//left side of the road
@@ -723,17 +726,12 @@ void saveCar(Car car) {
 void loadGame() {
     FILE *gameFile = fopen(gameTxt, "rb");
     FILE *carsFile = fopen(CarsTxt, "rb");
-
     if (gameFile != NULL && carsFile != NULL) {
+        fread(&playingGame, sizeof(Game), 1, gameFile);
 
-        Game game;
-        fread(&game, sizeof(Game), 1, gameFile);
-        printGameInf(game);
-        playingGame = game;
-        sleep(5);
         fclose(gameFile);
 
-        playingGame.IsGameRunning = true;
+        playingGame.IsGameRunning = false;
         playingGame.IsSaveCliked = false;
 
         Car car;
@@ -770,7 +768,9 @@ void startGame(bool isNewGame) {
     } else {
         loadGame();
         refresh();
+        playingGame.IsGameRunning = true;
     }
+
     pthread_t th1;                            //create new thread
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
