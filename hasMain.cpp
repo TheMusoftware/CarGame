@@ -731,7 +731,7 @@ void loadGame() {
     FILE *carsFile = fopen(CarsTxt, "rb");
 
     if (gameFile != NULL && carsFile != NULL) {
-        pthread_mutex_lock(&playingGame.mutexFile);
+       // pthread_mutex_lock(&playingGame.mutexFile);
 
         fread(&playingGame, sizeof(Game), 1, gameFile);
         fclose(gameFile);
@@ -762,7 +762,7 @@ void loadGame() {
         fclose(gameFile);
         fclose(carsFile);
 
-        pthread_mutex_unlock(&playingGame.mutexFile);
+       // pthread_mutex_unlock(&playingGame.mutexFile);
 
     } else {
         if (gameFile != NULL) fclose(gameFile);
@@ -780,7 +780,7 @@ void startGame(bool isNewGame) {
         initGame();
     } else {
         loadGame();
-        //refresh();
+        refresh();
     }
     //initWindow();
     pthread_t th1;                            //create new thread
