@@ -126,6 +126,8 @@ void resetFiles();
 bool isValidCar(Car car);
 bool collisionCheck(Car car);
 
+//Silinecek
+void printGameInf(Game playingGame);
 void printDebugInf(char text[100]);
 
 int main() {
@@ -162,7 +164,6 @@ void *newGame(void *args) {
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
 
     pthread_t thEnqueueCars, thDequeueCars;
-
     pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);// Start the thread to enqueue new cars
     pthread_create(&thDequeueCars, NULL, dequeueCar, NULL);
 
@@ -171,37 +172,14 @@ void *newGame(void *args) {
     while (playingGame.IsGameRunning) {// Continue until the game is over
         printCurrentPoints();
         key = getch();// Get input for the player to press the arrow keys
-
         if (key != KEYERROR) {
-
-             if (isMovementKey(key)) {
-                moveCar(key);
-            }
-            else {
-                if (ESC == key) {
-                playingGame.IsGameRunning = false;
-                playingGame.cars = queue<Car>();
-                clear();
-                refresh();
-                }
-                else if (SAVEKEY == key) {
-                playingGame.IsSaveCliked = true;
-                playingGame.IsGameRunning = false;
-                resetFiles();
-                saveGame();
-                clear();
-                refresh();
-                }
-           }
+            handleInput(key);
         }
-
         usleep(GAMESLEEPRATE);// sleep
     }
 
     pthread_join(thEnqueueCars, NULL);
     pthread_join(thDequeueCars, NULL);
-
-
     pthread_exit(NULL);
 }
 
@@ -254,11 +232,11 @@ void drawCar(Car c, int type, int direction) {
     //If the user does not want to exit the game and the game continues
     if (playingGame.IsSaveCliked != true && playingGame.IsGameRunning == true) {
         init_pair(c.ID, c.clr, 0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
-                //0: Black (COLOR_BLACK)
-                //1: Red (COLOR_RED)
-                //2: Green (COLOR_GREEN)
-                //3: Yellow (COLOR_YELLOW)
-                //4: Blue (COLOR_BLUE)
+                                  //0: Black (COLOR_BLACK)
+                                  //1: Red (COLOR_RED)
+                                  //2: Green (COLOR_GREEN)
+                                  //3: Yellow (COLOR_YELLOW)
+                                  //4: Blue (COLOR_BLUE)
         attron(COLOR_PAIR(c.ID));//enable color pair
         char drawnChar;
         if (type == 1)
@@ -540,7 +518,31 @@ void moveCar(int key) {
     }
 }
 
+/* Mustafa Kazı */
+void gameOperations(int key) {
+    if (ESC == key) {
+        playingGame.IsGameRunning = false;
+        playingGame.cars = queue<Car>();
+        clear();
+        refresh();
+    } else if (SAVEKEY == key) {
+        playingGame.IsSaveCliked = true;
+        playingGame.IsGameRunning = false;
+        resetFiles();
+        saveGame();
+        clear();
+        refresh();
+    }
+}
 
+/* Mustafa Kazı */
+void handleInput(int key) {
+    if (isMovementKey(key)) {
+        moveCar(key);
+    } else {
+        gameOperations(key);
+    }
+}
 
 /* Uğur Tansal */
 Car generateCar(queue<Car> cars) {
@@ -622,8 +624,6 @@ void *moveEnemyCars(void *args) {
     car2.isExist = true;
 
     while (playingGame.IsGameRunning && car2.isExist) {
-
-
         drawCar(car2, 1, 0);
         car2.y += 1 + rand() % car2.speed;
 
@@ -635,13 +635,11 @@ void *moveEnemyCars(void *args) {
                 break;
             }
         } else {
-            // Update points safely
             pthread_mutex_lock(&playingGame.mutexFile);
             playingGame.points += car2.height * car2.width;
             pthread_mutex_unlock(&playingGame.mutexFile);
 
             car2.isExist = false;
-            printCurrentPoints();
             checkAndIncreaseLevel();
         }
 
@@ -673,20 +671,15 @@ void checkAndIncreaseLevel() {
 
 /* Mustafa Kazı */
 void *enqueueCars(void *) {
-   // mvprintw(20, 20, "%lu", playingGame.cars.size());
-
     while (playingGame.IsGameRunning) {
-
         if (playingGame.cars.size() < maxCarNumber) {
             playingGame.cars.push(generateCar(playingGame.cars));
         }
         sleep(EnQueueSleep);
     }
-
     pthread_exit(NULL);
 }
 
-/*Uğur Tansal*/
 void *dequeueCar(void *) {
     while (playingGame.IsGameRunning) {
         if (!playingGame.cars.empty()) {
@@ -714,9 +707,10 @@ void printCurrentPoints() {
 /* Mustafa Kazı */
 void saveGame() {
     FILE *gameFile = fopen(gameTxt, "wb");
-
-    fwrite(&playingGame, sizeof(Game), 1, gameFile);
-    fclose(gameFile);
+    if (gameFile != NULL) {
+        fwrite(&playingGame, sizeof(Game), 1, gameFile);
+        fclose(gameFile);
+    }
 }
 /* Mustafa Kazı */
 void saveCar(Car car) {
@@ -731,22 +725,20 @@ void loadGame() {
     FILE *carsFile = fopen(CarsTxt, "rb");
 
     if (gameFile != NULL && carsFile != NULL) {
-       // pthread_mutex_lock(&playingGame.mutexFile);
 
-        fread(&playingGame, sizeof(Game), 1, gameFile);
+        Game game;
+        fread(&game, sizeof(Game), 1, gameFile);
+        printGameInf(game);
+        playingGame = game;
+        sleep(5);
         fclose(gameFile);
 
         playingGame.IsGameRunning = true;
         playingGame.IsSaveCliked = false;
 
         Car car;
-
-        while (!playingGame.cars.empty()) {
-            playingGame.cars.pop();
-        }
         while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
             if (isValidCar(car)) {
-                    /*
                 pthread_t thCar;
                 Car *carCopy = (Car *) malloc(sizeof(Car));
                 if (carCopy != NULL) {
@@ -754,15 +746,11 @@ void loadGame() {
                     pthread_create(&thCar, NULL, moveEnemyCars, (void *)carCopy);
                     pthread_detach(thCar);
                 }
-                */
-                playingGame.cars.push(car);
             }
         }
 
-        fclose(gameFile);
         fclose(carsFile);
 
-       // pthread_mutex_unlock(&playingGame.mutexFile);
 
     } else {
         if (gameFile != NULL) fclose(gameFile);
@@ -774,6 +762,7 @@ void loadGame() {
 /* Mustafa Kazı */
 void startGame(bool isNewGame) {
     clear();
+    refresh();
     initWindow();
     refresh();
     if (isNewGame) {
@@ -782,7 +771,6 @@ void startGame(bool isNewGame) {
         loadGame();
         refresh();
     }
-    //initWindow();
     pthread_t th1;                            //create new thread
     pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
     pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
@@ -829,8 +817,42 @@ bool collisionCheck(Car car) {
 }
 
 void printDebugInf(char text[100]){
-    //clear();
+    clear();
     mvprintw(20,20,text);
     refresh();
     sleep(3);
+}
+
+void printGameInf(Game playingGame){
+    char buffer[1024]; // Yeterince büyük bir buffer tahsis edin
+    snprintf(buffer, sizeof(buffer),
+             "counter: %d\n"
+             "level: %d\n"
+             "moveSpeed: %d\n"
+             "points: %d\n"
+             "IsSaveCliked: %s\n"
+             "IsGameRunning: %s\n"
+             "current.ID: %d\n"
+             "current.height: %d\n"
+             "current.width: %d\n"
+             "current.speed: %d\n"
+             "current.x: %d\n"
+             "current.y: %d\n"
+             "current.clr: %d\n"
+             "current.chr: %c\n",
+             playingGame.counter,
+             playingGame.level,
+             playingGame.moveSpeed,
+             playingGame.points,
+             playingGame.IsSaveCliked ? "true" : "false",
+             playingGame.IsGameRunning ? "true" : "false",
+             playingGame.current.ID,
+             playingGame.current.height,
+             playingGame.current.width,
+             playingGame.current.speed,
+             playingGame.current.x,
+             playingGame.current.y,
+             playingGame.current.clr,
+             playingGame.current.chr);
+    printDebugInf(buffer);
 }
