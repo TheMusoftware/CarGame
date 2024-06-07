@@ -670,7 +670,7 @@ void *enqueueCars(void *) {
 
     pthread_exit(NULL);
 }
-/* Mustafa Kazı */
+/* Uğur Tansal */
 void *dequeueCar(void *args) {
     bool isNewGame = (bool *) args;
     bool operationSuccess = false;
@@ -741,7 +741,7 @@ bool loadGame() {
     }
 }
 
-
+/* Mustafa Kazı */
 void getLastCars() {
     FILE *carsFile = fopen(CarsTxt, "rb");
     if (carsFile != NULL) {
