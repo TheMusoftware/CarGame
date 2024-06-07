@@ -125,6 +125,7 @@ void startGame(bool isNewGame);
 void resetFiles();
 bool isValidCar(Car car);
 bool collisionCheck(Car car);
+void getLastCars();
 
 //Silinecek
 void printGameInf(Game playingGame);
@@ -156,31 +157,30 @@ void initGame() {
 }
 
 void *newGame(void *args) {
-
+    bool isNewGame = (bool *) args;
     if (playingGame.leftKey != leftKeyA) {
         playingGame.leftKey = leftKeyArrow;
         playingGame.rightKey = RightKeyArrow;
     }
 
     printWindow();
+    refresh();
     drawCar(playingGame.current, 2, 1);// Draw the car the player is driving on the screen
+    pthread_t thDequeueCars;
 
-    pthread_t thEnqueueCars, thDequeueCars;
-    pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);// Start the thread to enqueue new cars
-    pthread_create(&thDequeueCars, NULL, dequeueCar, NULL);
-
-
+    pthread_create(&thDequeueCars, NULL, dequeueCar, (void *) isNewGame);
+    refresh();
     int key;
+
     while (playingGame.IsGameRunning) {// Continue until the game is over
         printCurrentPoints();
+
         key = getch();// Get input for the player to press the arrow keys
         if (key != KEYERROR) {
             handleInput(key);
         }
         usleep(GAMESLEEPRATE);// sleep
     }
-
-    pthread_join(thEnqueueCars, NULL);
     pthread_join(thDequeueCars, NULL);
     pthread_exit(NULL);
 }
@@ -240,7 +240,7 @@ void drawCar(Car c, int type, int direction) {
                                   //2: Green (COLOR_GREEN)
                                   //3: Yellow (COLOR_YELLOW)
                                   //4: Blue (COLOR_BLUE)
-        attron(COLOR_PAIR(c.ID));//enable color pair
+        attron(COLOR_PAIR(c.ID)); //enable color pair
         char drawnChar;
         if (type == 1)
             drawnChar = ' ';// to remove car
@@ -272,7 +272,7 @@ void drawCar(Car c, int type, int direction) {
         else
             sprintf(text, "%d", c.height * c.width);// to show car's point in rectangle
         mvprintw(c.y + 1, c.x + 1, text);           // display car's point in rectangle
-        attroff(COLOR_PAIR(c.ID));                 // disable color pair
+        attroff(COLOR_PAIR(c.ID));                  // disable color pair
     }
 }
 
@@ -422,8 +422,8 @@ void loadColorPair() {
 /*Ugur Tansal*/
 void savePointFile(int point) {
     FILE *pointFile = fopen(pointsTxt, "a+");
-    fwrite(&point, sizeof(int), 1, pointFile);
-    fwrite("\n", 2, 1, pointFile);
+    fprintf(pointFile,"%d",point);
+    //fwrite("\n", 2, 1, pointFile);
     fclose(pointFile);
 }
 
@@ -548,7 +548,7 @@ void handleInput(int key) {
 }
 
 /* Uğur Tansal */
-Car generateCar(queue<Car> cars) {
+Car generateCar() {
     if (playingGame.cars.size() < maxCarNumber) {
 
         Car newCar;
@@ -561,7 +561,7 @@ Car generateCar(queue<Car> cars) {
             newCar.ID = IDSTART;
         }
 */
-        newCar.ID=playingGame.counter++;
+        newCar.ID = playingGame.counter++;
         srand(time(NULL));
         int chrNum;          //Random number for character
         bool control = false;//If the values uniquely
@@ -635,6 +635,7 @@ void *moveEnemyCars(void *args) {
 
             if (collisionCheck(car2)) {
                 playingGame.IsGameRunning = false;
+                savePointFile(playingGame.points);
                 break;
             }
         } else {
@@ -676,15 +677,28 @@ void checkAndIncreaseLevel() {
 void *enqueueCars(void *) {
     while (playingGame.IsGameRunning) {
         if (playingGame.cars.size() < maxCarNumber) {
-            playingGame.cars.push(generateCar(playingGame.cars));
+            playingGame.cars.push(generateCar());
         }
         sleep(EnQueueSleep);
     }
+
+
     pthread_exit(NULL);
 }
 
-void *dequeueCar(void *) {
+void *dequeueCar(void *args) {
+    bool isNewGame = (bool *) args;
+    bool operationSuccess = false;
+    pthread_t thEnqueueCars;
+    if(isNewGame)pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
     while (playingGame.IsGameRunning) {
+        if (!isNewGame && !operationSuccess) {
+            getLastCars();
+            operationSuccess = true;
+            pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
+        }
+
+
         if (!playingGame.cars.empty()) {
             Car frontCar = playingGame.cars.front();
             playingGame.cars.pop();
@@ -695,6 +709,7 @@ void *dequeueCar(void *) {
         }
         sleep(DeQueueSleepMin + 2);
     }
+    pthread_join(thEnqueueCars, NULL);
     pthread_exit(NULL);
 }
 
@@ -723,63 +738,61 @@ void saveCar(Car car) {
 }
 
 /* Mustafa Kazı */
+/* Mustafa Kazı */
 void loadGame() {
     FILE *gameFile = fopen(gameTxt, "rb");
-    FILE *carsFile = fopen(CarsTxt, "rb");
-    if (gameFile != NULL && carsFile != NULL) {
-        fread(&playingGame, sizeof(Game), 1, gameFile);
-
-        fclose(gameFile);
-
-        playingGame.IsGameRunning = false;
-        playingGame.IsSaveCliked = false;
-
-        Car car;
-        while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
-            if (isValidCar(car)) {
-                pthread_t thCar;
-                Car *carCopy = (Car *) malloc(sizeof(Car));
-                if (carCopy != NULL) {
-                    *carCopy = car;
-                    pthread_create(&thCar, NULL, moveEnemyCars, (void *)carCopy);
-                    pthread_detach(thCar);
-                }
-            }
+    if (gameFile != NULL) {
+        if (fread(&playingGame, sizeof(Game), 1, gameFile) == 1) {
+            fclose(gameFile);
+            playingGame.IsGameRunning = false;
+            playingGame.IsSaveCliked = false;
+        } else {
+            fclose(gameFile);
         }
-
-        fclose(carsFile);
-
-
-    } else {
-        if (gameFile != NULL) fclose(gameFile);
-        if (carsFile != NULL) fclose(carsFile);
     }
 }
 
+
+void getLastCars() {
+    FILE *carsFile = fopen(CarsTxt, "rb");
+    if (carsFile != NULL) {
+        Car car;
+        while (!playingGame.cars.empty()) playingGame.cars.pop();
+        while (fread(&car, sizeof(Car), 1, carsFile) == 1) {
+            if (isValidCar(car)) {
+                pthread_mutex_lock(&playingGame.mutexFile);
+                pthread_t thMoveEnemyCar;
+                pthread_create(&thMoveEnemyCar, NULL, moveEnemyCars, (void *) &car);
+                pthread_detach(thMoveEnemyCar);
+                usleep(playingGame.moveSpeed);
+                printCurrentPoints();
+                pthread_mutex_unlock(&playingGame.mutexFile);
+            }
+        }
+        fclose(carsFile);
+    }
+}
 
 /* Mustafa Kazı */
 void startGame(bool isNewGame) {
     clear();
     refresh();
-    initWindow();
-    refresh();
     if (isNewGame) {
         initGame();
     } else {
         loadGame();
-        refresh();
         playingGame.IsGameRunning = true;
+        refresh();
     }
-
-    pthread_t th1;                            //create new thread
-    pthread_create(&th1, NULL, newGame, NULL);// Run newGame function with thread
-    pthread_join(th1, NULL);                  //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
+    pthread_t th1;                                          //create new thread
+    pthread_create(&th1, NULL, newGame, (void *) isNewGame);// Run newGame function with thread
+    pthread_join(th1, NULL);                                //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
 }
 
 /* Mustafa Kazı */
-void resetFiles(){
-    fclose(fopen(gameTxt,"wb"));
-    fclose(fopen(CarsTxt,"wb"));
+void resetFiles() {
+    fclose(fopen(gameTxt, "wb"));
+    fclose(fopen(CarsTxt, "wb"));
 }
 
 /* Mustafa Kazı */
@@ -816,15 +829,15 @@ bool collisionCheck(Car car) {
     return collisionX && collisionY && collisionSides;// OR the conditions for collision
 }
 
-void printDebugInf(char text[100]){
-    clear();
-    mvprintw(20,20,text);
+void printDebugInf(char text[100]) {
+    // clear();
+    mvprintw(20, 20, text);
     refresh();
     sleep(3);
 }
 
-void printGameInf(Game playingGame){
-    char buffer[1024]; // Yeterince büyük bir buffer tahsis edin
+void printGameInf(Game playingGame) {
+    char buffer[1024];// Yeterince büyük bir buffer tahsis edin
     snprintf(buffer, sizeof(buffer),
              "counter: %d\n"
              "level: %d\n"
