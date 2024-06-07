@@ -52,9 +52,6 @@
 #define numOfChars 3        // maximum number of patterns that can be selected for cars
 #define settingMenuItem 2   // number of options in the setting menu
 #define mainMenuItem 6      // number of options in the main menu
-/* Mustafa Kazı */
-#define instructionsItem 4// number of options in the instructions
-
 
 using namespace std;
 typedef struct Car {//
@@ -90,9 +87,6 @@ const char *pointsTxt = "points.txt";
 const char *settingMenu[50] = {"Play with < and > arrow keys", "Play with A and D keys"};
 //Array with options for the Main menu
 const char *mainMenu[50] = {"New Game", "Load the last game", "Instructions", "Settings", "Points", "Exit"};
-//Array with options for the Instructors menu -> Mustafa Kazı
-const char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right",
-                               "ESC: exits the game without saving", "S: saves and exits the game"};
 
 void drawCar(Car c, int type, int direction);//prints or remove the given car on the screen
 void printWindow();                          //Draws the road on the screen
@@ -100,8 +94,8 @@ void *newGame(void *);                       // manages new game
 void initGame();                             // Assigns initial values to all control parameters for the new game
 void initWindow();                           //Creates a new window and sets I/O settings
 void printMainMenu();                        // Print main menu
-void *printInstructors(void *);              // Print instructions
-void *printSettings(void *);                 // Print settings
+void printInstructors();                     // Print instructions
+void printSettings();                        // Print settings
 void loadColorPair();                        // Assign color pairs
 void printTrees();
 void savePointFile(int point);
@@ -111,7 +105,7 @@ bool isMovementKey(int key);
 void moveCar(int key);
 void gameOperations(int key);
 void handleInput(int key);
-Car generateCar(queue<Car> cars);
+Car generateCar();
 void *moveEnemyCars(void *args);
 void calculateGameSpeed();
 void checkAndIncreaseLevel();
@@ -120,16 +114,12 @@ void *dequeueCar(void *);
 void printCurrentPoints();
 void saveGame();
 void saveCar(Car car);
-void loadGame();
+bool loadGame();
 void startGame(bool isNewGame);
 void resetFiles();
 bool isValidCar(Car car);
 bool collisionCheck(Car car);
 void getLastCars();
-
-//Silinecek
-void printGameInf(Game playingGame);
-void printDebugInf(char text[100]);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -311,7 +301,6 @@ void printMainMenu() {
 
             case ENTER:
                 switch (selected_menu_item) {
-                    pthread_t thMenu;
                     case 0:
                         startGame(true);// start new game
                         break;
@@ -322,12 +311,10 @@ void printMainMenu() {
 
                     case 2:
                         // Load Instr
-                        pthread_create(&thMenu, NULL, printInstructors, NULL);
-                        pthread_join(thMenu, NULL);
+                        printInstructors();
                         break;
                     case 3:
-                        pthread_create(&thMenu, NULL, printSettings, NULL);
-                        pthread_join(thMenu, NULL);
+                        printSettings();
                         break;
                     case 4:
                         // Show points
@@ -346,7 +333,10 @@ void printMainMenu() {
 }
 
 /* Mustafa Kazı */
-void *printInstructors(void *) {
+void printInstructors() {
+    char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right",
+                             "ESC: exits the game without saving", "S: saves and exits the game"};
+    int instructionsItem = 4;
     clear();
     for (int i = 0; i < instructionsItem; i++) {
         attron(COLOR_PAIR(1));
@@ -357,7 +347,7 @@ void *printInstructors(void *) {
 }
 
 /* Mustafa Kazı */
-void *printSettings(void *) {
+void printSettings() {
     clear();
     int selected_item = 0;
     start_color();
@@ -422,8 +412,7 @@ void loadColorPair() {
 /*Ugur Tansal*/
 void savePointFile(int point) {
     FILE *pointFile = fopen(pointsTxt, "a+");
-    fprintf(pointFile,"%d",point);
-    //fwrite("\n", 2, 1, pointFile);
+    fprintf(pointFile, "%d\n", point);
     fclose(pointFile);
 }
 
@@ -436,8 +425,8 @@ queue<int> getPoints() {
         return points;
     }
 
-    int point = -1;
-    while (fscanf(pointsFile, "%d", &point) == 1) {
+    int point;
+    while (fscanf(pointsFile, "%d\n", &point) == 1) {
         points.push(point);
     }
 
@@ -448,7 +437,6 @@ queue<int> getPoints() {
 
 /*Ugur Tansal*/
 void printPoints() {
-
     queue<int> points = getPoints();
     if (points.empty()) {
 
@@ -464,7 +452,6 @@ void printPoints() {
     int x = MENUX, y = MENUY;
     int gameNumber = 1;
 
-
     while (!points.empty()) {
 
         char text[200];
@@ -473,7 +460,6 @@ void printPoints() {
         mvprintw(y, x, text);
         y += MENUDIF;
 
-
         if (gameNumber % 10 == 1) {
             y = MENUY;
             x += MENUDIFX;
@@ -481,7 +467,6 @@ void printPoints() {
 
         points.pop();
     }
-
 
     attroff(COLOR_PAIR(1));
     refresh();
@@ -525,7 +510,6 @@ void moveCar(int key) {
 void gameOperations(int key) {
     if (ESC == key) {
         playingGame.IsGameRunning = false;
-        playingGame.cars = queue<Car>();
         clear();
         refresh();
     } else if (SAVEKEY == key) {
@@ -552,16 +536,6 @@ Car generateCar() {
     if (playingGame.cars.size() < maxCarNumber) {
 
         Car newCar;
-        /*
-        if (playingGame.cars.empty()) {
-            newCar.ID = IDSTART;
-        } else if (playingGame.cars.back().ID < IDMAX) {
-            newCar.ID = cars.back().ID++;
-        } else {
-            newCar.ID = IDSTART;
-        }
-*/
-        newCar.ID = playingGame.counter++;
         srand(time(NULL));
         int chrNum;          //Random number for character
         bool control = false;//If the values uniquely
@@ -573,7 +547,6 @@ Car generateCar() {
             newCar.height = rand() % (7 - MINH + 1) + MINH;
             newCar.width = rand() % (7 - MINW + 1) + MINW;
             do {
-                //newCar.x = rand() % (wWidth - 2 * MINW) + MINW;
                 newCar.x = rand() % (wWidth - 10 - MINX + 1) + MINX;
             } while ((newCar.x <= lineX && newCar.x + newCar.width > lineX) || newCar.x + newCar.width >= wWidth);
             newCar.speed = newCar.height / 2;
@@ -606,6 +579,10 @@ Car generateCar() {
             }
 
         } while (control);
+        if (playingGame.counter > IDMAX) {
+            playingGame.counter = IDSTART;
+        }
+        newCar.ID = playingGame.counter++;
 
         return newCar;
     }
@@ -682,7 +659,6 @@ void *enqueueCars(void *) {
         sleep(EnQueueSleep);
     }
 
-
     pthread_exit(NULL);
 }
 
@@ -690,12 +666,12 @@ void *dequeueCar(void *args) {
     bool isNewGame = (bool *) args;
     bool operationSuccess = false;
     pthread_t thEnqueueCars;
-    if(isNewGame)pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
+    if (isNewGame) pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
     while (playingGame.IsGameRunning) {
         if (!isNewGame && !operationSuccess) {
             getLastCars();
             operationSuccess = true;
-            pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
+            //pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
         }
 
 
@@ -738,21 +714,25 @@ void saveCar(Car car) {
 }
 
 /* Mustafa Kazı */
-/* Mustafa Kazı */
-void loadGame() {
+bool loadGame() {
     FILE *gameFile = fopen(gameTxt, "rb");
     if (gameFile != NULL) {
         if (fread(&playingGame, sizeof(Game), 1, gameFile) == 1) {
             fclose(gameFile);
             playingGame.IsGameRunning = false;
             playingGame.IsSaveCliked = false;
+            return false;
         } else {
             fclose(gameFile);
+            return true;
         }
+    }
+    else{
+       return true;
     }
 }
 
-
+/* Mustafa Kazı */
 void getLastCars() {
     FILE *carsFile = fopen(CarsTxt, "rb");
     if (carsFile != NULL) {
@@ -780,12 +760,14 @@ void startGame(bool isNewGame) {
     if (isNewGame) {
         initGame();
     } else {
-        loadGame();
+        isNewGame = loadGame();
+        if(isNewGame) initGame();
         playingGame.IsGameRunning = true;
         refresh();
     }
-    pthread_t th1;                                          //create new thread
+    pthread_t th1,th2;                                          //create new thread
     pthread_create(&th1, NULL, newGame, (void *) isNewGame);// Run newGame function with thread
+    pthread_create(&th2,NULL,enqueueCars,NULL);
     pthread_join(th1, NULL);                                //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
 }
 
@@ -827,45 +809,4 @@ bool collisionCheck(Car car) {
     bool collisionSides = (carTop <= currentCarBottom) && (carBottom >= currentCarTop);
 
     return collisionX && collisionY && collisionSides;// OR the conditions for collision
-}
-
-void printDebugInf(char text[100]) {
-    // clear();
-    mvprintw(20, 20, text);
-    refresh();
-    sleep(3);
-}
-
-void printGameInf(Game playingGame) {
-    char buffer[1024];// Yeterince büyük bir buffer tahsis edin
-    snprintf(buffer, sizeof(buffer),
-             "counter: %d\n"
-             "level: %d\n"
-             "moveSpeed: %d\n"
-             "points: %d\n"
-             "IsSaveCliked: %s\n"
-             "IsGameRunning: %s\n"
-             "current.ID: %d\n"
-             "current.height: %d\n"
-             "current.width: %d\n"
-             "current.speed: %d\n"
-             "current.x: %d\n"
-             "current.y: %d\n"
-             "current.clr: %d\n"
-             "current.chr: %c\n",
-             playingGame.counter,
-             playingGame.level,
-             playingGame.moveSpeed,
-             playingGame.points,
-             playingGame.IsSaveCliked ? "true" : "false",
-             playingGame.IsGameRunning ? "true" : "false",
-             playingGame.current.ID,
-             playingGame.current.height,
-             playingGame.current.width,
-             playingGame.current.speed,
-             playingGame.current.x,
-             playingGame.current.y,
-             playingGame.current.clr,
-             playingGame.current.chr);
-    printDebugInf(buffer);
 }
