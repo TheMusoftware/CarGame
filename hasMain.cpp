@@ -88,6 +88,7 @@ const char *settingMenu[50] = {"Play with < and > arrow keys", "Play with A and 
 //Array with options for the Main menu
 const char *mainMenu[50] = {"New Game", "Load the last game", "Instructions", "Settings", "Points", "Exit"};
 
+
 void drawCar(Car c, int type, int direction);//prints or remove the given car on the screen
 void printWindow();                          //Draws the road on the screen
 void *newGame(void *);                       // manages new game
@@ -120,6 +121,10 @@ void resetFiles();
 bool isValidCar(Car car);
 bool collisionCheck(Car car);
 void getLastCars();
+
+//Silinecek
+void printGameInf(Game playingGame);
+void printDebugInf(char text[100]);
 
 int main() {
     /*  Start - Mustafa Kazı */
@@ -337,7 +342,6 @@ void printInstructors() {
     char *instructors[50] = {"< or A: moves the car to the left", " > or D: moves the car to the right",
                              "ESC: exits the game without saving", "S: saves and exits the game"};
     int instructionsItem = 4;
-    clear();
     for (int i = 0; i < instructionsItem; i++) {
         attron(COLOR_PAIR(1));
         mvprintw(MENUY + MENUDIF * i, MENUX, "%s\n", instructors[i]);
@@ -412,7 +416,7 @@ void loadColorPair() {
 /*Ugur Tansal*/
 void savePointFile(int point) {
     FILE *pointFile = fopen(pointsTxt, "a+");
-    fprintf(pointFile, "%d\n", point);
+    fprintf(pointFile,"%d",point);
     fclose(pointFile);
 }
 
@@ -426,7 +430,7 @@ queue<int> getPoints() {
     }
 
     int point;
-    while (fscanf(pointsFile, "%d\n", &point) == 1) {
+    while (fscanf(pointsFile, "%d", &point) == 1) {
         points.push(point);
     }
 
@@ -437,6 +441,7 @@ queue<int> getPoints() {
 
 /*Ugur Tansal*/
 void printPoints() {
+
     queue<int> points = getPoints();
     if (points.empty()) {
 
@@ -452,6 +457,7 @@ void printPoints() {
     int x = MENUX, y = MENUY;
     int gameNumber = 1;
 
+
     while (!points.empty()) {
 
         char text[200];
@@ -460,6 +466,7 @@ void printPoints() {
         mvprintw(y, x, text);
         y += MENUDIF;
 
+
         if (gameNumber % 10 == 1) {
             y = MENUY;
             x += MENUDIFX;
@@ -467,6 +474,7 @@ void printPoints() {
 
         points.pop();
     }
+
 
     attroff(COLOR_PAIR(1));
     refresh();
@@ -510,6 +518,7 @@ void moveCar(int key) {
 void gameOperations(int key) {
     if (ESC == key) {
         playingGame.IsGameRunning = false;
+        playingGame.cars = queue<Car>();
         clear();
         refresh();
     } else if (SAVEKEY == key) {
@@ -661,7 +670,7 @@ void *enqueueCars(void *) {
 
     pthread_exit(NULL);
 }
-
+/* Mustafa Kazı */
 void *dequeueCar(void *args) {
     bool isNewGame = (bool *) args;
     bool operationSuccess = false;
@@ -673,7 +682,6 @@ void *dequeueCar(void *args) {
             operationSuccess = true;
             //pthread_create(&thEnqueueCars, NULL, enqueueCars, NULL);
         }
-
 
         if (!playingGame.cars.empty()) {
             Car frontCar = playingGame.cars.front();
@@ -713,6 +721,7 @@ void saveCar(Car car) {
     fclose(carsFile);
 }
 
+
 /* Mustafa Kazı */
 bool loadGame() {
     FILE *gameFile = fopen(gameTxt, "rb");
@@ -728,11 +737,11 @@ bool loadGame() {
         }
     }
     else{
-       return true;
+        return true;
     }
 }
 
-/* Mustafa Kazı */
+
 void getLastCars() {
     FILE *carsFile = fopen(CarsTxt, "rb");
     if (carsFile != NULL) {
@@ -765,9 +774,8 @@ void startGame(bool isNewGame) {
         playingGame.IsGameRunning = true;
         refresh();
     }
-    pthread_t th1,th2;                                          //create new thread
+    pthread_t th1;                                          //create new thread
     pthread_create(&th1, NULL, newGame, (void *) isNewGame);// Run newGame function with thread
-    pthread_create(&th2,NULL,enqueueCars,NULL);
     pthread_join(th1, NULL);                                //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
 }
 
