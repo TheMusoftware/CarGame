@@ -122,10 +122,6 @@ bool isValidCar(Car car);
 bool collisionCheck(Car car);
 void getLastCars();
 
-//Silinecek
-void printGameInf(Game playingGame);
-void printDebugInf(char text[100]);
-
 int main() {
     /*  Start - Mustafa Kazı */
     printMainMenu();
